@@ -78,8 +78,8 @@ void SystemOpenURL(const std::string& url) {
         std::system(command.c_str());
 }
 
-void openAuthenticationPage() {
-    const string authURL = "https://accounts.google.com/o/oauth2/auth?client_id=" + CLIENT_ID +
+void openAuthenticationPage(string& client_id) {
+    const string authURL = "https://accounts.google.com/o/oauth2/auth?client_id=" + client_id +
                            "&redirect_uri=" + "http://127.0.0.1:8080/" +
                            "&response_type=code" +
                            "&scope=https://www.googleapis.com/auth/photoslibrary.appendonly" +
@@ -112,13 +112,13 @@ void handle_request(tcp::socket &socket) {
 }
 
 // Function to start a basic HTTP server
-void start_http_server() {
+void start_http_server(string& client_id) {
     asio::io_context ioc;
     tcp::acceptor acceptor(ioc, tcp::endpoint(tcp::v4(), 8080));
 
     std::cout << "Waiting for OAuth response at http://127.0.0.1:8080/ ..." << std::endl;
     
-    openAuthenticationPage();
+    openAuthenticationPage(client_id);
 
     tcp::socket socket(ioc);
     acceptor.accept(socket);
@@ -150,12 +150,10 @@ std::string getRefreshToken(const std::string &code, const std::string &client_i
     return response;
 }
 
-void getAuthorization() {
-    start_http_server();
+void getAuthorization(string& client_id, string& client_secret) {
+    start_http_server(client_id);
     
     if (!authorization_code.empty()) {
-        std::string client_id = CLIENT_ID;
-        std::string client_secret = CLIENT_SECRET;
         std::string redirect_uri = "http://127.0.0.1:8080/";
         
         std::string response = getRefreshToken(authorization_code, client_id, client_secret, redirect_uri);
@@ -436,13 +434,14 @@ bool update_exif_original_date(const string& filename, const string& timestamp, 
 int main() {
     loadConfig();
     
+    string CLIENT_ID = jsonConfig["client_id"];
+    string CLIENT_SECRET = jsonConfig["client_secret"];
+
     if (!jsonConfig.contains("refresh_token")) {
-        getAuthorization();
+        getAuthorization(CLIENT_ID, CLIENT_SECRET);
     }
 
     string refresh_token = jsonConfig["refresh_token"];
-    string CLIENT_ID = jsonConfig["client_id"];
-    string CLIENT_SECRET = jsonConfig["client_secret"];
     
     string accessToken = getAccessToken(CLIENT_ID, CLIENT_SECRET, refresh_token);
     
