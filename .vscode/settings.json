@@ -1,0 +1,7 @@
+{
+    "C_Cpp.default.includePath": [
+        "/opt/homebrew/include",
+        "/opt/homebrew/include/freetype2",
+        "/opt/homebrew/lib"
+    ]
+}
