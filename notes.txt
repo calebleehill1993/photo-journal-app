@@ -1,0 +1,5 @@
+Next Steps:
+- Batch Photos Upload (Max 50)
+- Return Photos ID
+- Set-up Doc Creation
+- Get Photos descriptions (real photos and videos) (Probably not possible after the API updates on March 31, 2025)
