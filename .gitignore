@@ -6,12 +6,13 @@
 .DS_Store
 .AppleDouble
 .LSOverride
-.vscode/
+.vscode/**
 
 # app specific
 config.json
 main
-data/
+data/**
+*.png
 
 # Icon must end with two \r
 Icon

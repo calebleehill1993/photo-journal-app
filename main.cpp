@@ -23,11 +23,17 @@
 #include <iomanip>
 #include <exiv2/exiv2.hpp>
 
-#ifdef _WIN32
+#if defined(WIN32) || defined(_WIN32) || defined(__WIN32__) || defined(__NT__)
     #include <windows.h>
 #else
     #include <sys/stat.h>
     #include <utime.h>
+    #include <limits.h>
+    #ifdef __APPLE__
+        #include <mach-o/dyld.h>
+    #elif __LINIX__
+        #include <unistd.h>
+    #endif
 #endif
 
 using json = nlohmann::json;
@@ -37,14 +43,38 @@ namespace http = beast::http;
 using tcp = asio::ip::tcp;
 using namespace std;
 
-const string IMAGE_PATH = "/Users/calebhill/Documents/google_photos_api_test/google_photos_api_test/test_photo.png";
-const string JSON_CONFIG_PATH = "/Users/calebhill/Documents/google_photos_api_test/google_photos_api_test/config.json";
-
 std::string authorization_code;
 
 json jsonConfig;
 
+std::string getExecutableDirectory() {
+    #if defined(WIN32) || defined(_WIN32) || defined(__WIN32__) || defined(__NT__)
+        char path[MAX_PATH];
+        GetModuleFileName(NULL, path, MAX_PATH);
+        return std::filesystem::path(path).parent_path().string() + "/";
+    #elif __APPLE__
+        char path[PATH_MAX];
+        uint32_t size = sizeof(path);
+        if (_NSGetExecutablePath(path, &size) == 0) {
+            return std::filesystem::path(path).parent_path().string() + "/";
+        }
+        return "";
+    #elif __linux__
+        char path[PATH_MAX];
+        ssize_t len = readlink("/proc/self/exe", path, sizeof(path) - 1);
+        if (len != -1) {
+            path[len] = '\0';
+            return std::filesystem::path(path).parent_path().string() + "/";
+        }
+        return "";
+    #else
+    #error "Unknown compiler"
+    #endif
+}
+
 void loadConfig() {
+    const string JSON_CONFIG_PATH = "config.json";
+
     cout << "Loading config file...." << endl;
     
     std::ifstream file(JSON_CONFIG_PATH);
@@ -52,6 +82,8 @@ void loadConfig() {
 }
 
 void writeJson(const string& fieldName, const string& value) {
+    const string JSON_CONFIG_PATH = "config.json";
+
     jsonConfig[fieldName] = value;
     
     // Write JSON to file
@@ -432,30 +464,37 @@ bool update_exif_original_date(const string& filename, const string& timestamp, 
 
 
 int main() {
+    const string project_path = getExecutableDirectory();
+
+    cout << project_path;
+    
+    filesystem::current_path(project_path);
+
     loadConfig();
     
     string CLIENT_ID = jsonConfig["client_id"];
     string CLIENT_SECRET = jsonConfig["client_secret"];
 
+    cout << "here2" << endl;
     if (!jsonConfig.contains("refresh_token")) {
         getAuthorization(CLIENT_ID, CLIENT_SECRET);
     }
 
+    cout << "here3" << endl;
+
     string refresh_token = jsonConfig["refresh_token"];
+
+    string doc_id = jsonConfig["doc_ids"]["test_2"];
     
     string accessToken = getAccessToken(CLIENT_ID, CLIENT_SECRET, refresh_token);
     
-    string fileResponse = getDocFile("1uDcyeROfk7oubtzgjCIFFE4E9dbSbkUIx1m2LxqHiNM", accessToken);
+    string fileResponse = getDocFile(doc_id, accessToken);
     
     vector<Entry> entries = extract_entries(fileResponse, jsonConfig["default_timezone_offset"], jsonConfig["adjust_for_daylight_savings"]);
     
     for (Entry entry : entries) {
         cout << entry.to_string() << endl;
     }
-    
-    const string project_path = "/Users/calebhill/Documents/google_photos_api_test/google_photos_api_test/";
-    
-    filesystem::current_path(project_path);
     
     char* font = "/System/Library/Fonts/Supplemental/Arial Unicode.ttf";
     
@@ -481,7 +520,7 @@ int main() {
             description = description + paragraph;
         }
         
-        string timestamp = entry.getDate() + " " + entry.getTime();  // EXIF format (YYYY:MM:DD HH:MM:SS)
+        string timestamp = entry.get_exif_datetime();  // EXIF format (YYYY:MM:DD HH:MM:SS)
         
         if (update_exif_original_date(project_path + filename, timestamp, entry.getTimeOffset())) {
             cout << "EXIF metadata updated successfully." << endl;

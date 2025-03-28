@@ -70,6 +70,12 @@ public:
     string to_timestamp() {
         return date + "T" + time + timeOffset;
     }
+
+    string get_exif_datetime() {
+        string exif_datetime = date + " " + time;
+        replace(exif_datetime.begin(), exif_datetime.end(), '-', ':');
+        return exif_datetime;
+    }
     
     string formatted_id(const string& id) {
         string formatted = id;
