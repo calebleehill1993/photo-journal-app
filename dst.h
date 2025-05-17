@@ -4,6 +4,9 @@
 //
 //  Created by Caleb Hill on 3/25/25.
 //
+#ifndef DST_H
+#define DST_H
+
 
 #include <iostream>
 #include <sstream>
@@ -117,3 +120,43 @@ string adjust_for_daylight_savings(const string& date, const string& time, const
     
     return offset;
 }
+
+std::string computeUtcDateTime(const std::string& date,
+    const std::string& time,
+    const std::string& timeOffset) {
+
+    std::time_t now = std::time(nullptr);
+    std::tm local_tm = *std::localtime(&now);
+    std::tm utc_tm = *std::gmtime(&now);
+    
+    // Convert both to time_t again for difference (local time needs to be re-encoded)
+    std::time_t local_tt = std::mktime(&local_tm);  // Interprets tm as local time
+    std::time_t utc_tt = std::mktime(&utc_tm);      // Interprets tm as local time (so we treat utc_tm as if it's local)
+
+    int localTimeAdjustment = static_cast<int>(std::difftime(local_tt, utc_tt));
+        
+    // Parse "2025-05-09" and "22:34"
+    std::tm tm = {};
+    std::istringstream ss(date + " " + time);
+    ss >> std::get_time(&tm, "%Y-%m-%d %H:%M");
+
+    // Convert to time_t in local time
+    std::time_t local = std::mktime(&tm);
+
+    // Parse offset "-08:00" or "+05:30"
+    int sign = (timeOffset[0] == '-') ? -1 : 1;
+    int hours = std::stoi(timeOffset.substr(1, 2));
+    int minutes = std::stoi(timeOffset.substr(4, 2));
+    int offsetSeconds = sign * (hours * 3600 + minutes * 60);
+
+    // Convert to UTC
+    std::time_t utc = local - offsetSeconds + localTimeAdjustment;
+
+    std::tm* gmt = std::gmtime(&utc);
+    char buffer[25];
+    std::strftime(buffer, sizeof(buffer), "%Y-%m-%dT%H:%M:%S", gmt);
+
+    return std::string(buffer);  // ISO-like UTC timestamp
+}
+
+#endif

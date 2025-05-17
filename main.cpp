@@ -18,7 +18,7 @@
 #include <cstdio>
 #include "pngwriter.h"
 #include "docs_json_formatter.h"
-#include "image_generator.cpp"
+#include "image_generator.h"
 #include <ctime>
 #include <iomanip>
 #include <exiv2/exiv2.hpp>
@@ -302,7 +302,7 @@ string uploadImage(const string& accessToken, const string& imagePath, string& f
 }
 
 // Function to create a media item
-bool createMediaItem(const string& accessToken, const string& uploadToken, const string& filename, const string& description) {
+string createMediaItem(const string& accessToken, const string& uploadToken, const string& filename, const string& description) {
     CURL* curl;
     CURLcode res;
     string response;
@@ -333,7 +333,7 @@ bool createMediaItem(const string& accessToken, const string& uploadToken, const
     curl = curl_easy_init();
     if (!curl) {
         cerr << "CURL initialization failed!" << endl;
-        return false;
+        return "";
     }
 
     struct curl_slist* headers = NULL;
@@ -354,14 +354,17 @@ bool createMediaItem(const string& accessToken, const string& uploadToken, const
 
     if (res != CURLE_OK) {
         cerr << "Failed to create media item: " << curl_easy_strerror(res) << endl;
-        return false;
+        return "";
     }
 
     cout << "Response: " << response << endl;
-    return true;
+
+    auto jsonResponse = json::parse(response);
+    string photos_id = jsonResponse["newMediaItemResults"][0]["mediaItem"]["id"].get<string>();
+    return photos_id;
 }
 
-// Function to upload an image and return the upload token
+// Function to get a file from Google Drive
 string getDriveFile(const string& fileId, const string& accessToken) {
     CURL* curl;
     CURLcode res;
@@ -392,6 +395,154 @@ string getDriveFile(const string& fileId, const string& accessToken) {
 
     return response; // File Response
 }
+
+
+// Function to create a Google Sheet in the specified location
+string createGoogleSheetInFolder(const string& accessToken, const string& sheetName, const string& folderId) {
+    CURL* curl = curl_easy_init();
+    string response_string;
+    CURLcode res;
+
+    if (curl) {
+        string url = "https://www.googleapis.com/drive/v3/files";
+
+        struct curl_slist* headers = nullptr;
+        headers = curl_slist_append(headers, ("Authorization: Bearer " + accessToken).c_str());
+        headers = curl_slist_append(headers, "Content-Type: application/json");
+
+        json j;
+        j["name"] = sheetName;
+        j["mimeType"] = "application/vnd.google-apps.spreadsheet";
+        j["parents"] = json::array({ folderId });
+
+        string postData = j.dump();
+
+        curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
+        curl_easy_setopt(curl, CURLOPT_POSTFIELDS, postData.c_str());
+        curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
+
+        curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WriteCallback);
+        curl_easy_setopt(curl, CURLOPT_WRITEDATA, &response_string);
+
+        res = curl_easy_perform(curl);
+        curl_easy_cleanup(curl);
+
+        if (res != CURLE_OK) {
+            cerr << "curl_easy_perform() failed: " << curl_easy_strerror(res) << "\n";
+            return "";
+        }
+    }
+
+    json result = json::parse(response_string);
+
+    cout << result.dump(4);
+
+    return result.value("id", "");
+
+    return "";
+}
+
+
+bool appendRowsToSheet(const std::string& accessToken,
+                      const std::string& spreadsheetId,
+                      const std::vector<std::vector<std::string>>& rowData) {
+    CURL* curl = curl_easy_init();
+    if (!curl) return false;
+
+    std::string response_string;
+
+    // Build URL
+    std::string url = "https://sheets.googleapis.com/v4/spreadsheets/" + spreadsheetId +
+                      "/values/Sheet1!A1:append?valueInputOption=RAW&insertDataOption=INSERT_ROWS";
+
+    // JSON payload
+    json j;
+    j["values"] = rowData;
+
+    std::string postData = j.dump();
+
+    cout << postData << endl;
+
+    // Headers
+    std::string bearer = "Authorization: Bearer " + accessToken;
+    struct curl_slist* headers = nullptr;
+    headers = curl_slist_append(headers, bearer.c_str());
+    headers = curl_slist_append(headers, "Content-Type: application/json");
+
+    // Set options
+    curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
+    curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
+    curl_easy_setopt(curl, CURLOPT_POSTFIELDS, postData.c_str());
+
+    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WriteCallback);
+    curl_easy_setopt(curl, CURLOPT_WRITEDATA, &response_string);
+
+    CURLcode res = curl_easy_perform(curl);
+    curl_easy_cleanup(curl);
+
+    if (res != CURLE_OK) {
+        std::cerr << "Failed to append row: " << curl_easy_strerror(res) << "\n";
+        return false;
+    }
+
+    std::cout << "Response: " << response_string << "\n";
+    return true;
+}
+
+
+bool sortSheetByDateTime(const std::string& accessToken, const std::string& spreadsheetId, int sheetId = 0) {
+    CURL* curl = curl_easy_init();
+    if (!curl) return false;
+
+    std::string url = "https://sheets.googleapis.com/v4/spreadsheets/" + spreadsheetId + ":batchUpdate";
+    std::string response_string;
+
+    // Build sort request
+    nlohmann::json sortRequest = {
+        { "requests", {
+            {
+              { "sortRange", {
+                  { "range", {
+                      { "sheetId", sheetId },
+                      { "startRowIndex", 1 }
+                  }},
+                  { "sortSpecs", {
+                      {
+                        { "dimensionIndex", 9 },  // Column J = UTC
+                        { "sortOrder", "DESCENDING" }
+                      }
+                  }}
+              }}
+            }
+        }}
+    };
+
+    std::string postData = sortRequest.dump();
+
+    std::string bearer = "Authorization: Bearer " + accessToken;
+    struct curl_slist* headers = nullptr;
+    headers = curl_slist_append(headers, bearer.c_str());
+    headers = curl_slist_append(headers, "Content-Type: application/json");
+
+    curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
+    curl_easy_setopt(curl, CURLOPT_POSTFIELDS, postData.c_str());
+    curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
+
+    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WriteCallback);
+    curl_easy_setopt(curl, CURLOPT_WRITEDATA, &response_string);
+
+    CURLcode res = curl_easy_perform(curl);
+    curl_easy_cleanup(curl);
+
+    if (res != CURLE_OK) {
+        std::cerr << "Sort request failed: " << curl_easy_strerror(res) << "\n";
+        return false;
+    }
+
+    std::cout << "Sort response: " << response_string << "\n";
+    return true;
+}
+
 
 string getDocFile(const string& docId, const string& accessToken) {
     CURL* curl;
@@ -463,6 +614,8 @@ bool update_exif_original_date(const string& filename, const string& timestamp, 
 }
 
 
+
+
 int main() {
     const string project_path = getExecutableDirectory();
 
@@ -487,9 +640,13 @@ int main() {
     string doc_id = jsonConfig["doc_ids"]["test_2"];
     
     string accessToken = getAccessToken(CLIENT_ID, CLIENT_SECRET, refresh_token);
+
+    // cout << createGoogleSheetInFolder(accessToken, "Test Sheet 1", "1grBkdlFMlEX7-8XRL3a--_O2WUlKO-UB");
     
     string fileResponse = getDocFile(doc_id, accessToken);
     
+    std::vector<std::vector<std::string>> rows;
+
     vector<Entry> entries = extract_entries(fileResponse, jsonConfig["default_timezone_offset"], jsonConfig["adjust_for_daylight_savings"]);
     
     for (Entry entry : entries) {
@@ -531,14 +688,21 @@ int main() {
         string uploadToken = uploadImage(accessToken, project_path, filename);
         if (!uploadToken.empty()) {
             cout << "Upload Token: " << uploadToken << endl;
-            if (createMediaItem(accessToken, uploadToken, filename, description)) {
-                cout << "Image uploaded successfully!" << endl;
+            string photosId = createMediaItem(accessToken, uploadToken, filename, description);
+            if (photosId.size() > 0) {
+                cout << "Image " << photosId << " uploaded successfully!" << endl;
+                entry.setPhotosId(photosId);
             }
         } else {
             cerr << "Failed to upload image." << endl;
         }
+
+        rows.push_back(entry.to_vector());
         
     }
+
+    appendRowsToSheet(accessToken, "1HPEF_eJeOJk-TGn8d-8dPLttfI9lCfWfvvzFu9K82d4", rows);
+    sortSheetByDateTime(accessToken, "1HPEF_eJeOJk-TGn8d-8dPLttfI9lCfWfvvzFu9K82d4");
     
     return 0;
 }

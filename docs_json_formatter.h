@@ -1,3 +1,6 @@
+#ifndef DOC_JSON_FORMATTER_H
+#define DOC_JSON_FORMATTER_H
+
 #include <string>
 #include <regex>
 #include <nlohmann/json.hpp>
@@ -176,3 +179,5 @@ vector<Entry> extract_entries(const string& originalJson, const string& defaultT
 
     return entries;
 }
+
+#endif

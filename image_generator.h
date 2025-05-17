@@ -12,6 +12,9 @@
      -L/opt/homebrew/lib
  */
 
+#ifndef IMAGE_GENERATOR_H
+#define IMAGE_GENERATOR_H
+
 #include <pngwriter.h>
 #include <cmath>
 #include <iostream>
@@ -304,3 +307,5 @@ class PngTextWriter {
     }
     
 };
+
+#endif

@@ -4,9 +4,12 @@
 //
 //  Created by Caleb Hill on 3/22/25.
 //
+#ifndef ENTRY_H
+#define ENTRY_H
 
 #include <string>
 #include <nlohmann/json.hpp>
+#include "dst.h"
 
 using json = nlohmann::json;
 using namespace std;
@@ -34,6 +37,26 @@ public:
         this->entryType = entryType;
         this->generatedId = generateId();
     }
+
+    string vectorToString(const std::vector<std::string>& vec, const std::string& delimiter = "|") {
+        std::ostringstream oss;
+        for (size_t i = 0; i < vec.size(); ++i) {
+            oss << vec[i];
+            if (i != vec.size() - 1) {
+                oss << delimiter;
+            }
+        }
+        return oss.str();
+    }
+
+    void setPhotosId(string& photosId) {
+        cout << "setting PhotosID";
+        this->photosId = photosId;
+    }
+
+    string getPhotosId() {
+        return photosId;
+    }
     
     string getDate() {
         return date;
@@ -54,9 +77,17 @@ public:
     vector<string> getTitle() {
         return title;
     }
+
+    string getTitleAsString(const std::string& delimiter = "|") {
+        return vectorToString(title, delimiter);
+    }
     
     vector<string> getBody() {
         return body;
+    }
+
+    string getBodyAsString(const std::string& delimiter = "|") {
+        return vectorToString(body, delimiter);
     }
     
     string getEntryType() {
@@ -136,36 +167,36 @@ public:
         
         return json_entry.dump(2);
     }
-    
-    string getTitleString() {
-        string titleString;
-        string delimiter = "\n\n";
-        
-        for (string paragraph : title) {
-            titleString += paragraph + delimiter;
-        }
-        
-        if (!titleString.empty()) {
-            titleString.pop_back();
-            titleString.pop_back();
-        }
-        
-        return titleString;
+
+    vector<string> to_vector() {
+        vector<string> vec_string = {
+            date,
+            time,
+            timeOffset,
+            this->getTagsString(),
+            this->getTitleString(),
+            this->getBodyString(),
+            entryType,
+            generatedId,
+            photosId,
+            computeUtcDateTime(date, time, timeOffset)
+        };
+
+        return vec_string;
     }
     
-    string getBodyString() {
-        string bodyString;
-        string delimiter = "\n\n";
-        
-        for (string paragraph : body) {
-            bodyString += paragraph + delimiter;
-        }
-        
-        if (!bodyString.empty()) {
-            bodyString.pop_back();
-            bodyString.pop_back();
-        }
-        
-        return bodyString;
+    string getTitleString(const std::string& delimiter = "\n\n") {
+        return vectorToString(title, delimiter);
     }
+    
+    string getBodyString(const std::string& delimiter = "\n\n") {
+        return vectorToString(body, delimiter);
+    }
+
+    string getTagsString(const std::string& delimiter = "|") {
+        return vectorToString(tags, delimiter);
+    }
+    
 };
+
+#endif

@@ -1,5 +1,15 @@
 Next Steps:
-- Batch Photos Upload (Max 50)
-- Return Photos ID
-- Set-up Doc Creation
+- Batch Photos Upload (Max 50) - LATER
+- Entry limit in Photos (500 characters)
+- Set-up Doc Creation (Doc or Sheet....)
+- Add link from Google Photos to specific entry location
+- Deleting old file or text after uploaded
 - Get Photos descriptions (real photos and videos) (Probably not possible after the API updates on March 31, 2025)
+- Seperate API calls into their own file
+- Link Handling
+- Handling Other Formats
+- Add Audio File Processing
+- Using Photos ID to edit entries
+- Uploading previous journals
+- Color and Font Configs
+- Git Organization
