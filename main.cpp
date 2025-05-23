@@ -1,8 +1,11 @@
 /*
- g++ -std=c++17 -o main main.cpp \
-      -lpngwriter -lpng -lfreetype -lcurl -lexiv2 \
-      -I/opt/homebrew/include -I/opt/homebrew/include/freetype2 \
-      -L/opt/homebrew/lib
+A Simple Journal Entry Orgnaizer using Google Photos and other Google APIs
+
+By: Caleb Hill
+
+This program extracts journal entries from Google Docs,
+generates PNG images for each entry, uploads them to Google Photos,
+and loads the entries to a Google Sheet.
  */
 
 #include <iostream>
