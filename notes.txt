@@ -1,15 +1,23 @@
 Next Steps:
+- Add logging DOABLE
+- Git Organization DOABLE
+- Delete Photos when uploaded setting LATER
+- Default time setting - LATER
 - Batch Photos Upload (Max 50) - LATER
-- Entry limit in Photos (500 characters)
-- Set-up Doc Creation (Doc or Sheet....)
-- Add link from Google Photos to specific entry location
-- Deleting old file or text after uploaded
+- Add photos folder LATER
+- Add link from Google Photos to specific entry location (May not be possible) LATER
+- Add rich text formatting to journal storage location (bulletpoints, hyperlinks, etc...) LATER
+- Deleting old file or text after uploaded (setting) LATER
+- Handling Other Formats LATER
+- Add Audio File Processing LATER
+- Edit entries using PhotosID LATER
+- Uploading previous journals LATER
+- Color and Font Configs LATER
+- Export for printing LATER
+- Add checks for invalid refresh/accessTokens LATER
+- Add ability to load different config.json files LATER
 - Get Photos descriptions (real photos and videos) (Probably not possible after the API updates on March 31, 2025)
-- Seperate API calls into their own file
-- Link Handling
-- Handling Other Formats
-- Add Audio File Processing
-- Using Photos ID to edit entries
-- Uploading previous journals
-- Color and Font Configs
-- Git Organization
+
+NOTES:
+- Google Photos assigns a unique ID called the mediaItemID that is used in the productURL. 
+  This is not the same as the ID seen when looking at the Google Photos URL. That is a shortened version for sharing.
