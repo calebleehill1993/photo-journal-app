@@ -1,33 +1,26 @@
-//
-//  entry.h
-//  google_photos_api_test
-//
-//  Created by Caleb Hill on 3/22/25.
-//
 #ifndef ENTRY_H
 #define ENTRY_H
 
 #include <string>
 #include <nlohmann/json.hpp>
-#include "dst.h"
-
-using json = nlohmann::json;
-using namespace std;
+#include "../utils/time_utils.h"
+#include "../config/config_handler.h"
+#include <regex>
 
 class Entry {
 private:
-    string date;
-    string time;
-    string timeOffset;
-    vector<string> tags;
-    vector<string> title;
-    vector<string> body;
-    string entryType;
-    string generatedId;
-    string photosId;
+    std::string date;
+    std::string time;
+    std::string timeOffset;
+    vector<std::string> tags;
+    vector<std::string> title;
+    vector<std::string> body;
+    std::string entryType;
+    std::string generatedId;
+    std::string photosId;
     
 public:
-    Entry(string date, string time, string timeOffset, vector<string> tags, vector<string> title, vector<string> body, string entryType) {
+    Entry(std::string date, std::string time, std::string timeOffset, vector<std::string> tags, vector<std::string> title, vector<std::string> body, std::string entryType) {
         this->date = date;
         this->time = time;
         this->timeOffset = timeOffset;
@@ -77,17 +70,9 @@ public:
     vector<string> getTitle() {
         return title;
     }
-
-    string getTitleAsString(const std::string& delimiter = "|") {
-        return vectorToString(title, delimiter);
-    }
     
     vector<string> getBody() {
         return body;
-    }
-
-    string getBodyAsString(const std::string& delimiter = "|") {
-        return vectorToString(body, delimiter);
     }
     
     string getEntryType() {
@@ -153,6 +138,25 @@ public:
         
         return formatted_id(id);
     }
+
+    std::string generatePhotosDescription() {
+        string description = "";
+        std::string ellipse = "...";
+        int photosDescriptionCharLimit = ConfigHandler::getInstance().getConfigValue("settings", "photos_description_char_limit");
+        int maxDescriptionLength = photosDescriptionCharLimit - ellipse.length();
+        
+        if (entryType.length() > 0) {
+            description = description + "Type: " + entryType + "\n\n";
+        }
+        
+        description = description + getBodyString();
+
+        if (description.length() > photosDescriptionCharLimit) {
+            description = description.substr(0, maxDescriptionLength) + ellipse;
+        }
+        
+        return description;
+    }
     
     string to_string() {
         json json_entry;
@@ -179,7 +183,7 @@ public:
             entryType,
             generatedId,
             photosId,
-            computeUtcDateTime(date, time, timeOffset)
+            TimeUtils::computeUtcDateTime(date, time, timeOffset)
         };
 
         return vec_string;

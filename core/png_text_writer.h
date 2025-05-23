@@ -1,19 +1,5 @@
-//
-//  image_generator.cpp
-//  google_photos_api_test
-//
-//  Created by Caleb Hill on 2/27/25.
-//
-
-/*
- g++ -std=c++17 -o image_generator image_generator.cpp \
-     -lpngwriter -lpng -lfreetype -lcurl \
-     -I/opt/homebrew/include -I/opt/homebrew/include/freetype2 \
-     -L/opt/homebrew/lib
- */
-
-#ifndef IMAGE_GENERATOR_H
-#define IMAGE_GENERATOR_H
+#ifndef PNG_TEXT_WRITER_H
+#define PNG_TEXT_WRITER_H
 
 #include <pngwriter.h>
 #include <cmath>
@@ -21,7 +7,7 @@
 #include <sstream>
 #include <vector>
 #include <string>
-using namespace std;
+#include "../config/config_handler.h"
 #include <ctime>
 #include <cstdlib>
 #include <filesystem>
@@ -30,16 +16,16 @@ using namespace std;
 #include <cctype>     // For ::tolower
 #include <regex>      // For regex_replace
 
-vector<string> split_sentence(string sen) {
+std::vector<std::string> split_sentence(std::string sen) {
   
     // Create a stringstream object
-    stringstream ss(sen);
+    std::stringstream ss(sen);
     
     // Variable to hold each word
-    string word;
+    std::string word;
     
     // Vector to store the words
-    vector<string> words;
+    std::vector<std::string> words;
     
     // Extract words from the sentence
     while (ss >> word) {
@@ -51,28 +37,28 @@ vector<string> split_sentence(string sen) {
     return words;
 }
 
-bool string_contains_element(string str, const char* elements) {
+bool string_contains_element(std::string str, const char* elements) {
     for (int i = 0; i < strlen(elements); i++) {
-        if (str.find(elements[i]) != string::npos) {
+        if (str.find(elements[i]) != std::string::npos) {
             return true;
         }
     }
     return false;
 }
 
-string get_current_datetime() {
+std::string get_current_datetime() {
     // Get the current time and date
     time_t now = time(0);
     tm *ltm = localtime(&now);
 
     // Format the date and time as "YYYY-MM-DD HH:MM:SS"
-    stringstream datetime;
+    std::stringstream datetime;
     datetime << 1900 + ltm->tm_year << "-"
-             << setw(2) << setfill('0') << 1 + ltm->tm_mon << "-"
-             << setw(2) << setfill('0') << ltm->tm_mday << " "
-             << setw(2) << setfill('0') << ltm->tm_hour << ":"
-             << setw(2) << setfill('0') << ltm->tm_min << ":"
-             << setw(2) << setfill('0') << ltm->tm_sec;
+             << std::setw(2) << std::setfill('0') << 1 + ltm->tm_mon << "-"
+             << std::setw(2) << std::setfill('0') << ltm->tm_mday << " "
+             << std::setw(2) << std::setfill('0') << ltm->tm_hour << ":"
+             << std::setw(2) << std::setfill('0') << ltm->tm_min << ":"
+             << std::setw(2) << std::setfill('0') << ltm->tm_sec;
     
     return datetime.str();
 };
@@ -99,22 +85,25 @@ class PngTextWriter {
         int start_height;
         int line_size;
         int space_width;
-        string line;
+        std::string line;
         int running_width;
         int line_number;
         int cursor;
         pngwriter image;
-        vector<string> paragraphs;
-        string timestamp;
-        string filename;
+        std::vector<std::string> paragraphs;
+        std::string timestamp;
+        std::string filename;
         char* font;
     
     public:
-    PngTextWriter(vector<string> paragraphs, string date, string time, string filename, char* font) {
+    PngTextWriter(std::vector<std::string> paragraphs, std::string date, std::string time, std::string filename) {
         aspect_ratio_width = 7;
         aspect_ratio_height = 9;
         aspect_ratio = (float) aspect_ratio_width / aspect_ratio_height;
         margins = 0.05;
+        std::string fontPath = ConfigHandler::getInstance().getConfigValue("settings", "font_path");
+        font = new char[fontPath.length() + 1];
+        strcpy(font, fontPath.c_str());
         font_size = 100;
         descenders = "gjpqy";
         descender_spacing = 30;
@@ -131,14 +120,17 @@ class PngTextWriter {
         vertical_margin_size = top_margin - bottom_margin;
         start_height = top_margin - font_size;
         space_width = image.get_text_width_utf8(font, font_size, " ");
-        string line = "";
+        std::string line = "";
         running_width = 0;
         line_number = 0;
         cursor = top_margin - font_size;
         this->paragraphs = paragraphs;
         this->timestamp = date + "T" + time + "+07:00";
         this->filename = filename;
-        this->font = font;
+    }
+
+    ~PngTextWriter() {
+        delete[] font;
     }
     
     void set_dimensions(int new_height) {
@@ -158,7 +150,7 @@ class PngTextWriter {
         int paragraph_count = paragraphs.size();
         for (int j = 0; j < paragraph_count; j++) {
             
-            vector<string> words = split_sentence(paragraphs.at(j));
+            std::vector<std::string> words = split_sentence(paragraphs.at(j));
             line = "";
             running_width = 0;
 
@@ -248,7 +240,7 @@ class PngTextWriter {
         
         int paragraph_count = paragraphs.size();
         for (int j = 0; j < paragraph_count; j++) {
-            vector<string> words = split_sentence(paragraphs.at(j));
+            std::vector<std::string> words = split_sentence(paragraphs.at(j));
             line = "";
             running_width = 0;
             
@@ -294,7 +286,7 @@ class PngTextWriter {
             }
         }
         
-        cout << "Successfully generated image." << endl;
+        std::cout << "Successfully generated image." << std::endl;
         
         save_and_close();
         
@@ -303,7 +295,7 @@ class PngTextWriter {
     
     void save_and_close() {
         image.close();
-        cout << "Image successfully saved and closed." << endl;
+        std::cout << "Image successfully saved and closed." << std::endl;
     }
     
 };
