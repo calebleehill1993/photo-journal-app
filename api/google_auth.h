@@ -8,12 +8,10 @@
 #include "../config/config_handler.h"
 #include "../utils/web_utils.h"
 
-using json = nlohmann::json;
 namespace asio = boost::asio;
 namespace beast = boost::beast;
 namespace http = beast::http;
 using tcp = asio::ip::tcp;
-using namespace std;
 
 class GoogleAuth {
 public:
@@ -26,14 +24,40 @@ public:
     GoogleAuth(const GoogleAuth&) = delete;
     GoogleAuth& operator=(const GoogleAuth&) = delete;
 
+    std::string getAccessToken() {
+        if (!accessToken.empty()) {
+            return accessToken;
+        }
+        
+        else {
+            accessToken = getNewAccessToken();
+            return accessToken;
+        }
+    }
+
+private:
+    GoogleAuth() {
+        clientId = ConfigHandler::getInstance().getConfigValue("google_auth", "client_id");
+        clientSecret = ConfigHandler::getInstance().getConfigValue("google_auth", "client_secret");
+    }
+    ~GoogleAuth() = default; // Private destructor
+
+    // Private members for authentication
+    std::string clientId;
+    std::string clientSecret;
+    std::string authorizationCode;
+    std::string refreshToken;
+    std::string accessToken;
+    std::string redirectUri;
+
     void openAuthenticationPage() {
-        const string authURL = "https://accounts.google.com/o/oauth2/auth?client_id=" + clientId +
+        const std::string authURL = "https://accounts.google.com/o/oauth2/auth?client_id=" + clientId +
                                "&redirect_uri=" + redirectUri +
                                "&response_type=code" +
                                "&scope=https://www.googleapis.com/auth/photoslibrary.appendonly" +
                                " https://www.googleapis.com/auth/drive";
         
-        cout << "Sending User to Authentication URL" << endl << authURL << endl;
+        std::cout << "Sending User to Authentication URL" << std::endl << authURL << std::endl;
         
         SystemOpenURL(authURL);
     }
@@ -90,7 +114,9 @@ public:
             std::size_t endPos = targetUrl.find("&", pos);
             authorizationCode = targetUrl.substr(pos + 5, endPos - (pos + 5));  // Extract the OAuth code
             std::cout << "Authorization Code Received: " << authorizationCode << std::endl;
-        } else {
+        }
+        
+        else {
             std::cerr << "Authorization code not found in the URL." << std::endl;
         }
     }
@@ -114,6 +140,7 @@ public:
         if (!pipe) {
             std::cerr << "Error running cURL command!" << std::endl;
         }
+
         while (fgets(buffer, sizeof(buffer), pipe) != nullptr) {
             response += buffer;
         }
@@ -123,7 +150,7 @@ public:
     }
 
     void saveRefreshToken(const std::string& response) {
-        json jsonResponse = json::parse(response);
+        nlohmann::json jsonResponse = nlohmann::json::parse(response);
         refreshToken = jsonResponse["refresh_token"];
         std::cout << "Refresh Token: " << refreshToken << std::endl;
 
@@ -135,7 +162,9 @@ public:
     void getRefreshToken() {
         try {
             refreshToken = ConfigHandler::getInstance().getConfigValue("google_auth", "refresh_token");
-        } catch (const std::runtime_error& e) {
+        }
+        
+        catch (const std::runtime_error& e) {
             std::cout << "Refresh token not found. Initiating authorization process to retrieve it." << std::endl;
             getNewRefreshToken();
         }
@@ -149,12 +178,12 @@ public:
 
         CURL* curl = curl_easy_init();
         if (!curl) {
-            cerr << "Failed to initialize cURL." << endl;
+            std::cerr << "Failed to initialize cURL." << std::endl;
             return "";
         }
 
-        string response;
-        string postFields = "client_id=" + clientId +
+        std::string response;
+        std::string postFields = "client_id=" + clientId +
                             "&client_secret=" + clientSecret +
                             "&refresh_token=" + refreshToken +
                             "&grant_type=refresh_token";
@@ -169,37 +198,13 @@ public:
         curl_easy_cleanup(curl);
 
         if (res != CURLE_OK) {
-            cerr << "cURL request failed: " << curl_easy_strerror(res) << endl;
+            std::cerr << "cURL request failed: " << curl_easy_strerror(res) << std::endl;
             return "";
         }
 
-        json jsonResponse = json::parse(response);
+        nlohmann::json jsonResponse = nlohmann::json::parse(response);
         return jsonResponse["access_token"];
     }
-
-    std::string getAccessToken() {
-        if (!accessToken.empty()) {
-            return accessToken;
-        } else {
-            accessToken = getNewAccessToken();
-            return accessToken;
-        }
-    }
-
-private:
-    GoogleAuth() {
-        clientId = ConfigHandler::getInstance().getConfigValue("google_auth", "client_id");
-        clientSecret = ConfigHandler::getInstance().getConfigValue("google_auth", "client_secret");
-    }
-    ~GoogleAuth() = default; // Private destructor
-
-    // Private members for authentication
-    std::string clientId;
-    std::string clientSecret;
-    std::string authorizationCode;
-    std::string refreshToken;
-    std::string accessToken;
-    std::string redirectUri;
 };
 
 #endif // GOOGLE_AUTH_H

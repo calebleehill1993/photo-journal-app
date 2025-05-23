@@ -5,8 +5,8 @@
 #include <regex>
 #include <nlohmann/json.hpp>
 #include "entry.h"
-#include "../utils/time_utils.h"
 #include "entry_extractor.h"
+#include "../utils/time_utils.h"
 
 std::vector<std::string> split(const std::string& str, char delimiter) {
     std::vector<std::string> result;
@@ -108,7 +108,7 @@ public:
                         std::string content = text_run["content"].get<std::string>();
                         text += content;
 
-                        if (content != "\n" && text_run["textStyle"].contains("bold")) {
+                        if (is_bold == false && content != "\n" && text_run["textStyle"].contains("bold")) {
                             is_bold = text_run["textStyle"]["bold"].get<bool>();
                         }
                     }

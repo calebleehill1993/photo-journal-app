@@ -6,7 +6,7 @@ By: Caleb Hill
 This program extracts journal entries from Google Docs,
 generates PNG images for each entry, uploads them to Google Photos,
 and loads the entries to a Google Sheet.
- */
+*/
 
 #include <iostream>
 #include <string>
@@ -19,13 +19,7 @@ and loads the entries to a Google Sheet.
 #include "api/google_api_handler.h"
 #include "utils/file_utils.h"
 
-int main() {
-    const std::string project_path = FileUtils::getExecutableDirectory();
-
-    FileUtils::setCurrentPath(project_path);
-
-    GoogleAPIHandler googleAPIHandler = GoogleAPIHandler();;
-
+std::vector<Entry> extractEntries(GoogleAPIHandler& googleAPIHandler) {
     std::vector<std::unique_ptr<EntryExtractor>> entryExtractors;
     entryExtractors.push_back(std::make_unique<GoogleDocsEntryExtractor>(googleAPIHandler.getDoc()));
     
@@ -35,26 +29,41 @@ int main() {
         auto extractedEntries = extractor->extract_entries(); // Use -> to call the method on the pointer
         entries.insert(entries.end(), extractedEntries.begin(), extractedEntries.end());
     }
-    
-    std::vector<std::vector<std::string>> rows;
-    
-    for (Entry entry : entries) {
 
-        PngTextWriter pngTextWriter(entry.getTitle(), entry.getDate(), entry.getTime(), entry.to_filename());
-        pngTextWriter.write_text();
+    return entries;
+}
+
+void processEntries(const std::string& projectPath, std::vector<Entry>& entries, GoogleAPIHandler& googleAPIHandler) {
+    std::vector<std::vector<std::string>> rowEntries;
+    
+    for (Entry& entry : entries) {
+
+        PngTextWriter pngTextWriter(entry.getTitle(), entry.to_filename());
+        pngTextWriter.writeText();
         
         std::string filename = entry.to_filename();
         
-        FileUtils::update_exif_original_date(project_path + filename, entry.get_exif_datetime(), entry.getTimeOffset());
+        FileUtils::update_exif_original_date(projectPath + filename, entry.get_exif_datetime(), entry.getTimeOffset());
 
-        std::string photosId = googleAPIHandler.uploadPhoto(project_path, filename, entry.generatePhotosDescription());
+        std::string photosId = googleAPIHandler.uploadPhoto(projectPath, filename, entry.generatePhotosDescription());
         entry.setPhotosId(photosId);
         FileUtils::deleteFile(filename);
 
-        rows.push_back(entry.to_vector());
+        rowEntries.push_back(entry.to_vector());
     }
 
-    googleAPIHandler.appendRowsToSheet(rows);
+    googleAPIHandler.appendRowsToSheet(rowEntries);
+}
+
+int main() {
+    const std::string projectPath = FileUtils::getExecutableDirectory();
+    FileUtils::setCurrentPath(projectPath);
+
+    GoogleAPIHandler googleAPIHandler = GoogleAPIHandler();
+
+    std::vector<Entry> entries = extractEntries(googleAPIHandler);
+
+    processEntries(projectPath, entries, googleAPIHandler);
     
     return 0;
 }

@@ -12,15 +12,15 @@ private:
     std::string date;
     std::string time;
     std::string timeOffset;
-    vector<std::string> tags;
-    vector<std::string> title;
-    vector<std::string> body;
+    std::vector<std::string> tags;
+    std::vector<std::string> title;
+    std::vector<std::string> body;
     std::string entryType;
     std::string generatedId;
     std::string photosId;
     
 public:
-    Entry(std::string date, std::string time, std::string timeOffset, vector<std::string> tags, vector<std::string> title, vector<std::string> body, std::string entryType) {
+    Entry(std::string date, std::string time, std::string timeOffset, std::vector<std::string> tags, std::vector<std::string> title, std::vector<std::string> body, std::string entryType) {
         this->date = date;
         this->time = time;
         this->timeOffset = timeOffset;
@@ -31,7 +31,7 @@ public:
         this->generatedId = generateId();
     }
 
-    string vectorToString(const std::vector<std::string>& vec, const std::string& delimiter = "|") {
+    std::string vectorToString(const std::vector<std::string>& vec, const std::string& delimiter = "|") {
         std::ostringstream oss;
         for (size_t i = 0; i < vec.size(); ++i) {
             oss << vec[i];
@@ -42,59 +42,59 @@ public:
         return oss.str();
     }
 
-    void setPhotosId(string& photosId) {
-        cout << "setting PhotosID";
+    void setPhotosId(std::string& photosId) {
+        std::cout << "setting PhotosID";
         this->photosId = photosId;
     }
 
-    string getPhotosId() {
+    std::string getPhotosId() {
         return photosId;
     }
     
-    string getDate() {
+    std::string getDate() {
         return date;
     }
     
-    string getTime() {
+    std::string getTime() {
         return time;
     }
     
-    string getTimeOffset() {
+    std::string getTimeOffset() {
         return timeOffset;
     }
     
-    vector<string> getTags() {
+    std::vector<std::string> getTags() {
         return tags;
     }
     
-    vector<string> getTitle() {
+    std::vector<std::string> getTitle() {
         return title;
     }
     
-    vector<string> getBody() {
+    std::vector<std::string> getBody() {
         return body;
     }
     
-    string getEntryType() {
+    std::string getEntryType() {
         return entryType;
     }
     
-    string to_filename() {
+    std::string to_filename() {
         return generatedId + ".png";
     }
     
-    string to_timestamp() {
+    std::string to_timestamp() {
         return date + "T" + time + timeOffset;
     }
 
-    string get_exif_datetime() {
-        string exif_datetime = date + " " + time;
-        replace(exif_datetime.begin(), exif_datetime.end(), '-', ':');
+    std::string get_exif_datetime() {
+        std::string exif_datetime = date + " " + time;
+        std::replace(exif_datetime.begin(), exif_datetime.end(), '-', ':');
         return exif_datetime;
     }
     
-    string formatted_id(const string& id) {
-        string formatted = id;
+    std::string formatted_id(const std::string& id) {
+        std::string formatted = id;
 
         // Convert to lowercase
         transform(formatted.begin(), formatted.end(), formatted.begin(), ::tolower);
@@ -103,18 +103,18 @@ public:
         replace(formatted.begin(), formatted.end(), ':', '-');
 
         // Replace illegal characters (anything that is not alphanumeric, _, +, or -) with '-'
-        formatted = regex_replace(formatted, regex("[^a-z0-9_+-]"), "_");
+        formatted = std::regex_replace(formatted, std::regex("[^a-z0-9_+-]"), "_");
 
         return formatted;
     }
     
-    string get_first_n_chars(vector<string> input, int chars_needed) {
+    std::string getFirstNCharsFromVector(const std::vector<std::string>& input, int chars_needed) {
         // Concatenate characters from the vector until we have the first 10 characters
-        string truncated_paragraphs;
+        std::string truncated_paragraphs;
 
-        for (const string& str : input) {
+        for (const std::string& str : input) {
             if (chars_needed > 0) {
-                int chars_to_take = min(chars_needed, (int)str.length());
+                int chars_to_take = std::min(chars_needed, (int)str.length());
                 truncated_paragraphs += str.substr(0, chars_to_take);
                 chars_needed -= chars_to_take;
             }
@@ -126,21 +126,21 @@ public:
         return truncated_paragraphs;
     }
     
-    string generateId() {
-        string id;
+    std::string generateId() {
+        std::string id;
         id += to_timestamp() + "_";
-        for (string tag : tags) {
+        for (std::string tag : tags) {
             id += tag + "_";
         }
         id += entryType + "_";
-        id += get_first_n_chars(title, 10) + "_";
-        id += get_first_n_chars(body, 10);
+        id += getFirstNCharsFromVector(title, 10) + "_";
+        id += getFirstNCharsFromVector(body, 10);
         
         return formatted_id(id);
     }
 
     std::string generatePhotosDescription() {
-        string description = "";
+        std::string description = "";
         std::string ellipse = "...";
         int photosDescriptionCharLimit = ConfigHandler::getInstance().getConfigValue("settings", "photos_description_char_limit");
         int maxDescriptionLength = photosDescriptionCharLimit - ellipse.length();
@@ -158,8 +158,8 @@ public:
         return description;
     }
     
-    string to_string() {
-        json json_entry;
+    std::string to_string() {
+        nlohmann::json json_entry;
         json_entry["date"] = date;
         json_entry["time"] = time;
         json_entry["timeOffset"] = timeOffset;
@@ -172,8 +172,8 @@ public:
         return json_entry.dump(2);
     }
 
-    vector<string> to_vector() {
-        vector<string> vec_string = {
+    std::vector<std::string> to_vector() {
+        std::vector<std::string> vector_of_strings = {
             date,
             time,
             timeOffset,
@@ -186,18 +186,18 @@ public:
             TimeUtils::computeUtcDateTime(date, time, timeOffset)
         };
 
-        return vec_string;
+        return vector_of_strings;
     }
     
-    string getTitleString(const std::string& delimiter = "\n\n") {
+    std::string getTitleString(const std::string& delimiter = "\n\n") {
         return vectorToString(title, delimiter);
     }
     
-    string getBodyString(const std::string& delimiter = "\n\n") {
+    std::string getBodyString(const std::string& delimiter = "\n\n") {
         return vectorToString(body, delimiter);
     }
 
-    string getTagsString(const std::string& delimiter = "|") {
+    std::string getTagsString(const std::string& delimiter = "|") {
         return vectorToString(tags, delimiter);
     }
     

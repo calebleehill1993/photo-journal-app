@@ -121,9 +121,7 @@ namespace FileUtils {
             std::cout << "Successfully updated EXIF OffsetTimeOriginal to: " << offset << std::endl;
 
             return;
-        } 
-        
-        catch (const Exiv2::Error& e) {  // Corrected exception handling
+        } catch (const Exiv2::Error& e) {  // Corrected exception handling
             std::cerr << "EXIF Update Error: " << e.what() << std::endl;
             return;
         }

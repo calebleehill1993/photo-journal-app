@@ -97,9 +97,7 @@ namespace TimeUtils {
             if (intHour < 0) {
                 sign = "-";
                 intHour *= -1;
-            }
-            
-            else {
+            } else {
                 sign = "+";
             }
             
@@ -152,6 +150,23 @@ namespace TimeUtils {
 
         return std::string(buffer);  // ISO-like UTC timestamp
     }
+
+    std::string get_current_datetime() {
+        // Get the current time and date
+        time_t now = time(0);
+        tm *ltm = localtime(&now);
+    
+        // Format the date and time as "YYYY-MM-DD HH:MM:SS"
+        std::stringstream datetime;
+        datetime << 1900 + ltm->tm_year << "-"
+                 << std::setw(2) << std::setfill('0') << 1 + ltm->tm_mon << "-"
+                 << std::setw(2) << std::setfill('0') << ltm->tm_mday << " "
+                 << std::setw(2) << std::setfill('0') << ltm->tm_hour << ":"
+                 << std::setw(2) << std::setfill('0') << ltm->tm_min << ":"
+                 << std::setw(2) << std::setfill('0') << ltm->tm_sec;
+        
+        return datetime.str();
+    };
 
 } // namespace TimeUtils
 

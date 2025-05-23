@@ -2,7 +2,6 @@
 #define ENTRY_EXTRACTOR_H
 
 #include <vector>
-#include <string>
 #include "entry.h"
 #include "../config/config_handler.h"
 

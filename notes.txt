@@ -1,6 +1,7 @@
 Next Steps:
 - Add logging DOABLE
 - Git Organization DOABLE
+- Allow for single newlines within title or body of entry LATER
 - Delete Photos when uploaded setting LATER
 - Default time setting - LATER
 - Batch Photos Upload (Max 50) - LATER
@@ -12,10 +13,10 @@ Next Steps:
 - Add Audio File Processing LATER
 - Edit entries using PhotosID LATER
 - Uploading previous journals LATER
-- Color and Font Configs LATER
 - Export for printing LATER
 - Add checks for invalid refresh/accessTokens LATER
 - Add ability to load different config.json files LATER
+- Backgrounds and colors based on tags LATER
 - Get Photos descriptions (real photos and videos) (Probably not possible after the API updates on March 31, 2025)
 
 NOTES:

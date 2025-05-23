@@ -54,16 +54,7 @@ namespace GooglePhotosAPI {
         CURL* curl;
         CURLcode res;
         std::string response;
-
-    //    json requestBody = {
-    //        {"newMediaItems", {
-    //            {"description", "This is Jake's Face!!!!"},
-    //            {"simpleMediaItem", {{"uploadToken", uploadToken},
-    //                                  {"fileName", "Jake's Face.png"}}}
-    //        }}
-    //    };
         
-
         nlohmann::json requestBody = {
             {"newMediaItems", {
                 {
