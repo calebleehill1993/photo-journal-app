@@ -27,9 +27,7 @@ public:
     std::string getAccessToken() {
         if (!accessToken.empty()) {
             return accessToken;
-        }
-        
-        else {
+        } else {
             accessToken = getNewAccessToken();
             return accessToken;
         }
@@ -114,9 +112,7 @@ private:
             std::size_t endPos = targetUrl.find("&", pos);
             authorizationCode = targetUrl.substr(pos + 5, endPos - (pos + 5));  // Extract the OAuth code
             std::cout << "Authorization Code Received: " << authorizationCode << std::endl;
-        }
-        
-        else {
+        } else {
             std::cerr << "Authorization code not found in the URL." << std::endl;
         }
     }
@@ -162,9 +158,7 @@ private:
     void getRefreshToken() {
         try {
             refreshToken = ConfigHandler::getInstance().getConfigValue("google_auth", "refresh_token");
-        }
-        
-        catch (const std::runtime_error& e) {
+        } catch (const std::runtime_error& e) {
             std::cout << "Refresh token not found. Initiating authorization process to retrieve it." << std::endl;
             getNewRefreshToken();
         }
@@ -191,7 +185,7 @@ private:
         curl_easy_setopt(curl, CURLOPT_URL, "https://oauth2.googleapis.com/token");
         curl_easy_setopt(curl, CURLOPT_POST, 1);
         curl_easy_setopt(curl, CURLOPT_POSTFIELDS, postFields.c_str());
-        curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WebUtils::WriteCallback);
+        curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WebUtils::writeCallback);
         curl_easy_setopt(curl, CURLOPT_WRITEDATA, &response);
 
         CURLcode res = curl_easy_perform(curl);

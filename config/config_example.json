@@ -1,0 +1,31 @@
+{
+    "google_auth": {
+        "client_id": "not_a_real_client_id.apps.googleusercontent.com",
+        "client_secret": "not_a_real_client_secret",
+        "redirect_uri": "http://127.0.0.1:8080/",
+        "refresh_token": "not_a_real_refresh_token"
+    },
+    "settings": {
+        "font_path": "/System/Library/Fonts/Supplemental/Arial Unicode.ttf",
+        "aspect_ratio_width": 7,
+        "aspect_ratio_height": 9,
+        "margins": 0.05,
+        "font_size": 100,
+        "font_color": {
+            "red": 1.0,
+            "green": 1.0,
+            "blue": 1.0
+        },
+        "text_alignment": "center",
+        "always_use_descender_spacing": true,
+        "adjust_for_daylight_savings": true,
+        "default_time": "23:59:59",
+        "default_timezone_offset": "-08:00",
+        "google_doc_id": "not_a_real_google_doc_id",
+        "google_sheet_id": "not_a_real_google_sheet_id",
+        "photos_description_char_limit": 1000
+    },
+    "debug_settings": {
+        "show_line_borders": false
+    }
+}

@@ -11,7 +11,6 @@
 
 namespace GooglePhotosAPI {
 
-    // Function to upload an image and return the upload token
     std::string uploadImage(const std::string& accessToken, const std::string& imagePath, std::string& filename) {
         CURL* curl;
         CURLcode res;
@@ -35,7 +34,7 @@ namespace GooglePhotosAPI {
         curl_easy_setopt(curl, CURLOPT_POST, 1);
         curl_easy_setopt(curl, CURLOPT_POSTFIELDS, fileData.c_str());
         curl_easy_setopt(curl, CURLOPT_POSTFIELDSIZE, fileData.size());
-        curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WebUtils::WriteCallback);
+        curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WebUtils::writeCallback);
         curl_easy_setopt(curl, CURLOPT_WRITEDATA, &response);
 
         res = curl_easy_perform(curl);
@@ -46,10 +45,9 @@ namespace GooglePhotosAPI {
             return "";
         }
 
-        return response; // Upload token
+        return response;
     }
 
-    // Function to create a media item
     std::string createMediaItem(const std::string& accessToken, const std::string& uploadToken, const std::string& filename, const std::string& description) {
         CURL* curl;
         CURLcode res;
@@ -85,7 +83,7 @@ namespace GooglePhotosAPI {
         curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
         curl_easy_setopt(curl, CURLOPT_POST, 1);
         curl_easy_setopt(curl, CURLOPT_POSTFIELDS, postData.c_str());
-        curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WebUtils::WriteCallback);
+        curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WebUtils::writeCallback);
         curl_easy_setopt(curl, CURLOPT_WRITEDATA, &response);
 
         res = curl_easy_perform(curl);

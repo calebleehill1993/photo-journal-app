@@ -7,87 +7,117 @@
 #include <iomanip>
 
 namespace TimeUtils {
+    
+    struct TimeInfo {
+        std::string time;
+        std::string timeOffset;
+    };
+    
+    /**
+     * Extracts the time and optional time offset from a given string.
+     */
+    TimeInfo extractTimeInfo(const std::string& input, std::regex& timePattern) {
+        std::smatch match;
+        std::string time;
+        if (regex_search(input, match, timePattern)) {
+            if (!match[2].str().empty()) {
+                time = match[1].str();
+            }
+            
+            else {
+                time = match[1].str() + ":00";
+            }
+    
+            // Extract HH:MM or HH:MM:SS
+            std::string offset = match[3].str(); // Extract +HH:MM or -HH:MM (if present)
+    
+            return {time, offset};
+        }
+    
+        // Return empty if no match found
+        return {"", ""};
+    }
 
     /**
      * Computes the date of the second Sunday of March for a given year.
      */
-    tm get_dst_start(int year) {
-        tm timeinfo = {};
-        timeinfo.tm_year = year - 1900;
-        timeinfo.tm_mon = 2;  // March (0-based index)
-        timeinfo.tm_mday = 8; // Start search from March 8 (earliest possible second Sunday)
-        timeinfo.tm_hour = 2; // 2 AM
-        timeinfo.tm_min = 0;
-        timeinfo.tm_sec = 0;
+    tm getDstStart(int year) {
+        tm timeInfo = {};
+        timeInfo.tm_year = year - 1900;
+        timeInfo.tm_mon = 2;  // March (0-based index)
+        timeInfo.tm_mday = 8; // Start search from March 8 (earliest possible second Sunday)
+        timeInfo.tm_hour = 2; // 2 AM
+        timeInfo.tm_min = 0;
+        timeInfo.tm_sec = 0;
 
-        mktime(&timeinfo); // Normalize to find the correct weekday
-        while (timeinfo.tm_wday != 0) { // Find the first Sunday
-            timeinfo.tm_mday++;
-            mktime(&timeinfo);
+        mktime(&timeInfo); // Normalize to find the correct weekday
+        while (timeInfo.tm_wday != 0) { // Find the first Sunday
+            timeInfo.tm_mday++;
+            mktime(&timeInfo);
         }
 
-        return timeinfo;
+        return timeInfo;
     }
 
     /**
      * Computes the date of the first Sunday of November for a given year.
      */
-    tm get_dst_end(int year) {
-        tm timeinfo = {};
-        timeinfo.tm_year = year - 1900;
-        timeinfo.tm_mon = 10; // November (0-based index)
-        timeinfo.tm_mday = 1; // Start search from November 1
-        timeinfo.tm_hour = 2; // 2 AM
-        timeinfo.tm_min = 0;
-        timeinfo.tm_sec = 0;
+    tm getDstEnd(int year) {
+        tm timeInfo = {};
+        timeInfo.tm_year = year - 1900;
+        timeInfo.tm_mon = 10; // November (0-based index)
+        timeInfo.tm_mday = 1; // Start search from November 1
+        timeInfo.tm_hour = 2; // 2 AM
+        timeInfo.tm_min = 0;
+        timeInfo.tm_sec = 0;
 
-        mktime(&timeinfo); // Normalize to find the correct weekday
-        while (timeinfo.tm_wday != 0) { // Find the first Sunday
-            timeinfo.tm_mday++;
-            mktime(&timeinfo);
+        mktime(&timeInfo); // Normalize to find the correct weekday
+        while (timeInfo.tm_wday != 0) { // Find the first Sunday
+            timeInfo.tm_mday++;
+            mktime(&timeInfo);
         }
 
-        return timeinfo;
+        return timeInfo;
     }
 
     /**
      * Parses a datetime string in "YYYY-MM-DD HH:MM:SS" format into a `tm` struct.
      */
-    tm parse_datetime(const std::string& datetime_str) {
-        tm timeinfo = {};
-        std::istringstream ss(datetime_str);
-        ss >> std::get_time(&timeinfo, "%Y-%m-%d %H:%M:%S");
+    tm parseDatetime(const std::string& datetimeStr) {
+        tm timeInfo = {};
+        std::istringstream ss(datetimeStr);
+        ss >> std::get_time(&timeInfo, "%Y-%m-%d %H:%M:%S");
         
         if (ss.fail()) {
             std::cerr << "Error: Invalid datetime format. Use YYYY-MM-DD HH:MM:SS" << std::endl;
         }
         
-        return timeinfo;
+        return timeInfo;
     }
 
     /**
      * Determines if Daylight Saving Time (DST) is active for a given datetime.
      */
-    bool is_daylight_savings_time(const std::string& datetime_str) {
-        tm input_time = parse_datetime(datetime_str);
-        int year = input_time.tm_year + 1900;
+    bool isDaylightSavingsTime(const std::string& datetimeStr) {
+        tm inputTime = parseDatetime(datetimeStr);
+        int year = inputTime.tm_year + 1900;
 
         // Get DST start and end dates
-        tm dst_start = get_dst_start(year);
-        tm dst_end = get_dst_end(year);
+        tm dstStart = getDstStart(year);
+        tm dstEnd = getDstEnd(year);
 
         // Convert to time_t for easy comparison
-        time_t input_epoch = mktime(&input_time);
-        time_t start_epoch = mktime(&dst_start);
-        time_t end_epoch = mktime(&dst_end);
+        time_t inputEpoch = mktime(&inputTime);
+        time_t startEpoch = mktime(&dstStart);
+        time_t endEpoch = mktime(&dstEnd);
 
-        return input_epoch >= start_epoch && input_epoch < end_epoch;
+        return inputEpoch >= startEpoch && inputEpoch < endEpoch;
     }
 
-    std::string adjust_for_daylight_savings(const std::string& date, const std::string& time, const std::string& offset) {
+    std::string adjustForDaylightSavings(const std::string& date, const std::string& time, const std::string& offset) {
         std::string datetime = date + " " + time;
         
-        if (is_daylight_savings_time(datetime)) {
+        if (isDaylightSavingsTime(datetime)) {
             std::string sign = offset.substr(0, 1);
             std::string hour = offset.substr(1, 2);
             std::string minutes = offset.substr(4, 2);
@@ -118,14 +148,14 @@ namespace TimeUtils {
         const std::string& timeOffset) {
 
         std::time_t now = std::time(nullptr);
-        std::tm local_tm = *std::localtime(&now);
-        std::tm utc_tm = *std::gmtime(&now);
+        std::tm localTm = *std::localtime(&now);
+        std::tm utcTm = *std::gmtime(&now);
         
         // Convert both to time_t again for difference (local time needs to be re-encoded)
-        std::time_t local_tt = std::mktime(&local_tm);  // Interprets tm as local time
-        std::time_t utc_tt = std::mktime(&utc_tm);      // Interprets tm as local time (so we treat utc_tm as if it's local)
+        std::time_t localTt = std::mktime(&localTm);  // Interprets tm as local time
+        std::time_t utcTt = std::mktime(&utcTm);      // Interprets tm as local time (so we treat utcTm as if it's local)
 
-        int localTimeAdjustment = static_cast<int>(std::difftime(local_tt, utc_tt));
+        int localTimeAdjustment = static_cast<int>(std::difftime(localTt, utcTt));
             
         // Parse "2025-05-09" and "22:34"
         std::tm tm = {};
@@ -135,7 +165,7 @@ namespace TimeUtils {
         // Convert to time_t in local time
         std::time_t local = std::mktime(&tm);
 
-        // Parse offset "-08:00" or "+05:30"
+        // Parse offset (Ex: "-08:00" or "+05:30")
         int sign = (timeOffset[0] == '-') ? -1 : 1;
         int hours = std::stoi(timeOffset.substr(1, 2));
         int minutes = std::stoi(timeOffset.substr(4, 2));
@@ -148,10 +178,10 @@ namespace TimeUtils {
         char buffer[25];
         std::strftime(buffer, sizeof(buffer), "%Y-%m-%dT%H:%M:%S", gmt);
 
-        return std::string(buffer);  // ISO-like UTC timestamp
+        return std::string(buffer);
     }
 
-    std::string get_current_datetime() {
+    std::string getCurrentDatetime() {
         // Get the current time and date
         time_t now = time(0);
         tm *ltm = localtime(&now);
@@ -168,6 +198,6 @@ namespace TimeUtils {
         return datetime.str();
     };
 
-} // namespace TimeUtils
+} // namespace Time
 
 #endif // TIME_UTILS_H

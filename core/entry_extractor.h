@@ -3,14 +3,13 @@
 
 #include <vector>
 #include "entry.h"
-#include "../config/config_handler.h"
 
 class EntryExtractor {
 public:
     virtual ~EntryExtractor() = default;
 
     // Pure virtual method to be implemented by subclasses
-    virtual std::vector<Entry> extract_entries() = 0;
+    virtual std::vector<Entry> extractEntries() = 0;
 };
 
 #endif // ENTRY_EXTRACTOR_H

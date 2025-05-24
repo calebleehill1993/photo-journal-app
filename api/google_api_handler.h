@@ -23,10 +23,10 @@ public:
         return GoogleDocsAPI::getDocFile(docId, accessToken);
     }
 
-    std::string uploadPhoto(const std::string& project_path, std::string& filename, const std::string& description) {
+    std::string uploadPhoto(const std::string& projectPath, std::string& filename, const std::string& description) {
         authenticate();
 
-        std::string uploadToken = GooglePhotosAPI::uploadImage(accessToken, project_path, filename);
+        std::string uploadToken = GooglePhotosAPI::uploadImage(accessToken, projectPath, filename);
 
         if (!uploadToken.empty()) {
             std::string photosId = GooglePhotosAPI::createMediaItem(accessToken, uploadToken, filename, description);

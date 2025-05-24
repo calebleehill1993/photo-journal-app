@@ -4,20 +4,14 @@
 #include <pngwriter.h>
 #include <cmath>
 #include <iostream>
-#include <sstream>
 #include <vector>
 #include <string>
-#include <cstdlib>
-#include <filesystem>
-#include <typeinfo>
-#include <algorithm>
-#include <cctype>
-#include <regex>
 #include "../utils/string_utils.h"
 #include "../config/config_handler.h"
 
 class PngTextWriter {
-    public:
+    
+public:
     PngTextWriter(const std::vector<std::string>& paragraphs, const std::string& filename) {
         // PngTextWriter parameters
         this->paragraphs = paragraphs;
@@ -36,10 +30,10 @@ class PngTextWriter {
         rightMargin = round(width * (1.0 - margins));
         bottomMargin = round(height * margins);
         topMargin = round(height * (1.0 - margins));
-        horizontalMarginSize = rightMargin - leftMargin;
-        verticalMarginSize = topMargin - bottomMargin;
+        textAreaWidth = rightMargin - leftMargin;
+        textAreaHeight = topMargin - bottomMargin;
 
-        // Image Font
+        // Image Font Settings
         std::string fontPath = ConfigHandler::getInstance().getConfigValue("settings", "font_path");
         font = new char[fontPath.length() + 1];
         strcpy(font, fontPath.c_str());
@@ -47,21 +41,20 @@ class PngTextWriter {
         red = ConfigHandler::getInstance().getConfigValue("settings", "font_color", "red");
         green = ConfigHandler::getInstance().getConfigValue("settings", "font_color", "green");
         blue = ConfigHandler::getInstance().getConfigValue("settings", "font_color", "blue");
+        textAlignment = ConfigHandler::getInstance().getConfigValue("settings", "text_alignment");
 
         // Spacing Settings
         alwaysUseDescenderSpacing = ConfigHandler::getInstance().getConfigValue("settings", "always_use_descender_spacing");
         descenders = "gjpqy";
         descenderSpacing = 30;
-        spacing = 10;
-        paragraphSpacing = 30;
+        lineSpacing = 10;
+        paragraphSpacing = fontSize + descenderSpacing + lineSpacing;
         spaceWidth = image.get_text_width_utf8(font, fontSize, " ");
 
         // Tracking Variables
-        startHeight = topMargin - fontSize;
-        std::string line = "";
-        runningWidth = 0;
-        lineNumber = 0;
-        cursor = topMargin - fontSize;
+        textHeight = 0;
+        paragraphCount = paragraphs.size();
+        heightDelta = 100;
 
         // Debugging
         showLineBorders = ConfigHandler::getInstance().getConfigValue("debug_settings", "show_line_borders");
@@ -75,54 +68,15 @@ class PngTextWriter {
         float backgroundColor = 0.0;
         
         image = pngwriter(width, height, backgroundColor, filename.c_str());
-        int textHeight = fitImage();
-        cursor = topMargin - round((verticalMarginSize - textHeight) / 2) - fontSize;
-        
-        int paragraphCount = paragraphs.size();
-        for (int j = 0; j < paragraphCount; j++) {
-            std::vector<std::string> words = StringUtils::splitSentence(paragraphs.at(j));
-            line = "";
-            runningWidth = 0;
-            
-            if (j > 0) {
-                cursor -= fontSize + spacing + descenderSpacing;
-            }
-            
-            int wordCount = words.size();
-            for (int i = 0; i < wordCount; i++) {
-                if (line.length() > 0) {
-                    runningWidth += spaceWidth;
-                }
+        std::vector<std::vector<std::string>> textSegments = fitImage();
+        int cursor = topMargin - round((textAreaHeight - textHeight) / 2) - fontSize;
 
-                char * word = new char[words.at(i).length() + 1];
-                strcpy(word, words.at(i).c_str());
-                
-                int wordWidth = image.get_text_width_utf8(font, fontSize, word);
-                
-                runningWidth += wordWidth;
-                
-                if (runningWidth <= horizontalMarginSize) {
-                    if (line.length() > 0) {
-                        line += " ";
-                    }
-                    
-                    line += words.at(i);
-                    if (i + 1 == wordCount) {
-                        writeLine(showLineBorders);
-                    }
-                } else {
-                    runningWidth -= (spaceWidth + wordWidth);
-                    
-                    writeLine(showLineBorders);
-                    
-                    lineNumber += 1;
-                    line = "";
-                    i -= 1;
-                    runningWidth = 0;
-                }
-                
-                delete[] word;
+        for (auto& paragraph : textSegments) {
+            for (auto& line : paragraph) {
+                writeLine(line, cursor);
+                cursor -= lineSpacing + getLineHeight(line);
             }
+            cursor -= paragraphSpacing;
         }
         
         std::cout << "Successfully generated image." << std::endl;
@@ -132,7 +86,7 @@ class PngTextWriter {
         return;
     }
 
-    private:
+private:
     std::vector<std::string> paragraphs;
     std::string filename;
     int aspectRatioWidth;
@@ -145,24 +99,23 @@ class PngTextWriter {
     int rightMargin;
     int bottomMargin;
     int topMargin;
-    int horizontalMarginSize;
-    int verticalMarginSize;
+    int textAreaWidth;
+    int textAreaHeight;
     char* font;
     int fontSize;
     float red;
     float green;
     float blue;
+    std::string textAlignment;
     const char * descenders;
     bool alwaysUseDescenderSpacing;
     int descenderSpacing;
-    int spacing;
+    int lineSpacing;
     int paragraphSpacing;
-    int startHeight;
     int spaceWidth;
-    std::string line;
-    int runningWidth;
-    int lineNumber;
-    int cursor;
+    int textHeight;
+    int paragraphCount;
+    int heightDelta;
     bool showLineBorders;
     pngwriter image;
 
@@ -173,97 +126,182 @@ class PngTextWriter {
         rightMargin = round(width * (1.0 - margins));
         bottomMargin = round(height * margins);
         topMargin = round(height * (1.0 - margins));
-        horizontalMarginSize = rightMargin - leftMargin;
-        verticalMarginSize = topMargin - bottomMargin;
+        textAreaWidth = rightMargin - leftMargin;
+        textAreaHeight = topMargin - bottomMargin;
         image.resize(width, height);
     };
     
-    int fitImage() {
-        int textHeight = fontSize + descenderSpacing;
-        int paragraphCount = paragraphs.size();
-        int heightDelta = 100;
+    void increaseImageSize() {
+        setDimensions(height + heightDelta);
+    };
+
+    int getTextWidth(const std::string& word) {
+        char * wordCopy = new char[word.length() + 1];
+        strcpy(wordCopy, word.c_str());
+        
+        int wordWidth = image.get_text_width_utf8(font, fontSize, wordCopy);
+        
+        delete[] wordCopy;
+        
+        return wordWidth;
+    };
+
+    bool fitsInHeight(int textHeight) {
+        if (textHeight > textAreaHeight) {
+            return false;
+        }
+        
+        return true;
+    };
+
+    bool fitsInWidth(int textWidth) {
+        if (textWidth > textAreaWidth) {
+            return false;
+        }
+        
+        return true;
+    }
+
+    bool lineHasDescenders(std::string& line) {
+        return StringUtils::stringContainsElement(line, descenders);
+    }
+
+    int getLineHeight(std::string& line) {
+        return fontSize + (lineHasDescenders(line) || alwaysUseDescenderSpacing) * descenderSpacing;
+    }
+
+    bool isFirstLineOfText(int lineNumber, int paragraphNumber) {
+        return (lineNumber == 0 && paragraphNumber == 0);
+    }
+
+    bool isFirstParagraph(int paragraphNumber) {
+        return (paragraphNumber == 0);
+    }
+
+    bool isLastWordInParagraph(int wordNumber, int wordCount) {
+        return (wordNumber + 1 == wordCount);
+    }
+
+    int calculateSpacing(std::string& line, int lineNumber, int paragraphNumber) {
+        if (isFirstLineOfText(lineNumber, paragraphNumber)) {
+            return getLineHeight(line);
+        }
+        
+        return lineSpacing + getLineHeight(line);
+    }
+
+    std::vector<std::vector<std::string>> fitImage() {
+        textHeight = 0;
+        std::vector<std::vector<std::string>> textSegments;
 
         for (int j = 0; j < paragraphCount; j++) {
-            
             std::vector<std::string> words = StringUtils::splitSentence(paragraphs.at(j));
-            line = "";
-            runningWidth = 0;
+            std::string line = "";
+            int runningLineWidth = 0;
+            int lineCount = 0;
+            textSegments.push_back(std::vector<std::string>());
 
-            if (j > 0) {
-                textHeight += fontSize + descenderSpacing + spacing;
+            if (!isFirstParagraph(j)) {
+                textHeight += paragraphSpacing;
+
+                if (!fitsInHeight(textHeight)) {
+                    increaseImageSize();
+                    return fitImage();
+                }
             }
             
-            int wordCount = words.size();
-            for (int i = 0; i < wordCount; i++) {
+            int paragraphWordCount = words.size();
+            for (int i = 0; i < paragraphWordCount; i++) {
+                // Adding a space between words
                 if (line.length() > 0) {
-                    runningWidth += spaceWidth;
+                    runningLineWidth += spaceWidth;
                 }
 
-                char * word = new char[words.at(i).length() + 1];
-                strcpy(word, words.at(i).c_str());
+                int wordWidth = getTextWidth(words.at(i));
                 
-                int wordWidth = image.get_text_width_utf8(font, fontSize, word);
-                
-                if (wordWidth > horizontalMarginSize) {
-                    delete[] word;
-                    setDimensions(height + heightDelta);
-                    textHeight = fitImage();
-                    return textHeight;
+                // Single word is too big for the text area
+                if (!fitsInWidth(wordWidth)) {
+                    increaseImageSize();
+                    return fitImage();
                 }
                 
-                runningWidth += wordWidth;
+                runningLineWidth += wordWidth;
                 
-                if (runningWidth <= horizontalMarginSize) {
+                if (fitsInWidth(runningLineWidth)) {
                     if (line.length() > 0) {
                         line += " ";
                     }
                     
                     line += words.at(i);
-                    if (i + 1 == wordCount && j + 1 < paragraphCount) {
-                        textHeight += fontSize + descenderSpacing + spacing;
+
+                    if (isLastWordInParagraph(i, paragraphWordCount)) {
+                        
+                        textHeight += calculateSpacing(line, lineCount, j);
+                        textSegments.at(j).push_back(line);
+
+                        if (!fitsInHeight(textHeight)) {
+                            increaseImageSize();
+                            return fitImage();
+                        }
                     }
-                }
-                else {
-                    runningWidth -= (spaceWidth + wordWidth);
+                } else {
+                    runningLineWidth -= (spaceWidth + wordWidth);
+
+                    textHeight += calculateSpacing(line, lineCount, j);
+                    textSegments.at(j).push_back(line);
+
+                    if (!fitsInHeight(textHeight)) {
+                        increaseImageSize();
+                        return fitImage();
+                    }
                     
-                    textHeight += fontSize + descenderSpacing + spacing;
-                    
+                    lineCount += 1;
                     line = "";
-                    i -= 1;
-                    runningWidth = 0;
+                    i -= 1; // Try the same word on the next line
+                    runningLineWidth = 0;
                 }
-                
-                delete[] word;
             }
         }
         
-        if (textHeight > verticalMarginSize) {
-            setDimensions(height + heightDelta);
-            textHeight = fitImage();
-        }
-        
-        return textHeight;
+        return textSegments;
         
     };
-    
-    void writeLine(bool createLines = false) {
-        bool lineHasDescenders = StringUtils::stringContainsElement(line, descenders);
-        
+
+    void drawText(int startX, int startY, const std::string& line) {
         char * lineCopy = new char[line.length() + 1];
         strcpy(lineCopy, line.c_str());
+        image.plot_text_utf8(font, fontSize, startX, startY, 0.0, lineCopy, red, green, blue);
+        delete[] lineCopy;
+    }
+
+    void drawBoxAroundText(int startX, int startY, int lineWidth, bool hasDescenders) {
+        startY = startY - (hasDescenders * descenderSpacing);
+        int endY = startY + fontSize;
+        int endX = startX + lineWidth;
+        image.square(startX, startY, endX, endY, 1.0, 0.0, 0.0);
+    }
+    
+    void writeLine(std::string& line, int startY) {
+        int startX = 0;
+
+        int lineWidth = getTextWidth(line);
         
-        int lineHorizontalStart = leftMargin + round((horizontalMarginSize - runningWidth) / 2);
-        
-        if (createLines) {
-            int yFrom = cursor - (lineHasDescenders * descenderSpacing);
-            int yTo = cursor + fontSize;
-            image.square(lineHorizontalStart, yFrom, lineHorizontalStart + runningWidth, yTo, 1.0, 0.0, 0.0);
+        if (textAlignment == "center") {
+            startX = leftMargin + round((textAreaWidth - lineWidth) / 2);
+        } else if (textAlignment == "right") {
+            startX = rightMargin - lineWidth;
+        } else if (textAlignment == "left") {
+            startX = leftMargin;
+        } else {
+            std::cerr << "Invalid alignment option. Defaulting to left." << std::endl;
+            startX = leftMargin;
         }
         
-        image.plot_text_utf8(font, fontSize, lineHorizontalStart, cursor, 0.0, lineCopy, red, green, blue);
-        delete[] lineCopy;
+        if (showLineBorders) {
+            drawBoxAroundText(startX, startY, lineWidth, lineHasDescenders(line));
+        }
         
-        cursor -= fontSize + spacing + ((lineHasDescenders || alwaysUseDescenderSpacing) * descenderSpacing);
+        drawText(startX, startY, line);
     };
     
     void saveAndClose() {

@@ -44,7 +44,7 @@ namespace GoogleSheetsAPI {
         curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
         curl_easy_setopt(curl, CURLOPT_POSTFIELDS, postData.c_str());
 
-        curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WebUtils::WriteCallback);
+        curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WebUtils::writeCallback);
         curl_easy_setopt(curl, CURLOPT_WRITEDATA, &response_string);
 
         CURLcode res = curl_easy_perform(curl);
@@ -70,7 +70,6 @@ namespace GoogleSheetsAPI {
         std::string url = "https://sheets.googleapis.com/v4/spreadsheets/" + spreadsheetId + ":batchUpdate";
         std::string response_string;
 
-        // Build sort request
         nlohmann::json sortRequest = {
             { "requests", {
                 {
@@ -101,7 +100,7 @@ namespace GoogleSheetsAPI {
         curl_easy_setopt(curl, CURLOPT_POSTFIELDS, postData.c_str());
         curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
 
-        curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WebUtils::WriteCallback);
+        curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WebUtils::writeCallback);
         curl_easy_setopt(curl, CURLOPT_WRITEDATA, &response_string);
 
         CURLcode res = curl_easy_perform(curl);

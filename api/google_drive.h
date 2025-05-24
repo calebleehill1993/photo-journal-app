@@ -28,7 +28,7 @@ namespace GoogleDriveAPI {
         curl_easy_setopt(curl, CURLOPT_URL, ("https://www.googleapis.com/drive/v3/files/" + fileId).c_str());
         curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
         curl_easy_setopt(curl, CURLOPT_HTTPGET, 1);
-        curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WebUtils::WriteCallback);
+        curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WebUtils::writeCallback);
         curl_easy_setopt(curl, CURLOPT_WRITEDATA, &response);
 
         res = curl_easy_perform(curl);
@@ -67,7 +67,7 @@ namespace GoogleDriveAPI {
             curl_easy_setopt(curl, CURLOPT_POSTFIELDS, postData.c_str());
             curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
 
-            curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WebUtils::WriteCallback);
+            curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WebUtils::writeCallback);
             curl_easy_setopt(curl, CURLOPT_WRITEDATA, &response_string);
 
             res = curl_easy_perform(curl);

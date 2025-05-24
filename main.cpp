@@ -26,7 +26,7 @@ std::vector<Entry> extractEntries(GoogleAPIHandler& googleAPIHandler) {
     std::vector<Entry> entries;
     
     for (auto& extractor : entryExtractors) {
-        auto extractedEntries = extractor->extract_entries(); // Use -> to call the method on the pointer
+        auto extractedEntries = extractor->extractEntries(); // Use -> to call the method on the pointer
         entries.insert(entries.end(), extractedEntries.begin(), extractedEntries.end());
     }
 
@@ -38,18 +38,18 @@ void processEntries(const std::string& projectPath, std::vector<Entry>& entries,
     
     for (Entry& entry : entries) {
 
-        PngTextWriter pngTextWriter(entry.getTitle(), entry.to_filename());
+        PngTextWriter pngTextWriter(entry.getTitle(), entry.toFilename());
         pngTextWriter.writeText();
         
-        std::string filename = entry.to_filename();
+        std::string filename = entry.toFilename();
         
-        FileUtils::update_exif_original_date(projectPath + filename, entry.get_exif_datetime(), entry.getTimeOffset());
+        FileUtils::updateExifOriginalDate(projectPath + filename, entry.getExifDatetime(), entry.getTimeOffset());
 
         std::string photosId = googleAPIHandler.uploadPhoto(projectPath, filename, entry.generatePhotosDescription());
         entry.setPhotosId(photosId);
         FileUtils::deleteFile(filename);
 
-        rowEntries.push_back(entry.to_vector());
+        rowEntries.push_back(entry.toVector());
     }
 
     googleAPIHandler.appendRowsToSheet(rowEntries);

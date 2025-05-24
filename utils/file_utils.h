@@ -98,7 +98,7 @@ namespace FileUtils {
      * @param offset The new offset for the timestamp in "+/-HH:MM" format.
      * @return True if successful, False otherwise.
      */
-    void update_exif_original_date(const std::string& filename, const std::string& timestamp, const std::string& offset) {
+    void updateExifOriginalDate(const std::string& filename, const std::string& timestamp, const std::string& offset) {
         try {
             // Open the image file
             Exiv2::Image::UniquePtr image = Exiv2::ImageFactory::open(filename);
