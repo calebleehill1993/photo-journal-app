@@ -97,10 +97,26 @@ public:
                 } else if (currentTags.empty() && StringUtils::isAllUppercaseLetters(text)) {
                     currentTags = StringUtils::split(text, '|');
                 } else {
-                    if (isBold) {
-                        currentTitle.push_back(text);
+                    if (newLineCounter == 0) {
+                        if (isBold) {
+                            if (currentTitle.empty()) {
+                                currentTitle.push_back(text);
+                            } else {
+                                currentTitle.back() += "\n" + text;
+                            }
+                        } else {
+                            if (currentBody.empty()) {
+                                currentBody.push_back(text);
+                            } else {
+                                currentBody.back() += "\n" + text;
+                            }
+                        }
                     } else {
-                        currentBody.push_back(text);
+                        if (isBold) {
+                            currentTitle.push_back(text);
+                        } else {
+                            currentBody.push_back(text);
+                        }
                     }
                 }
 
