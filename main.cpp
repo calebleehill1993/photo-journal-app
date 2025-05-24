@@ -26,7 +26,7 @@ std::vector<Entry> extractEntries(GoogleAPIHandler& googleAPIHandler) {
     std::vector<Entry> entries;
     
     for (auto& extractor : entryExtractors) {
-        auto extractedEntries = extractor->extractEntries(); // Use -> to call the method on the pointer
+        auto extractedEntries = extractor->extractEntries();
         entries.insert(entries.end(), extractedEntries.begin(), extractedEntries.end());
     }
 
@@ -34,14 +34,13 @@ std::vector<Entry> extractEntries(GoogleAPIHandler& googleAPIHandler) {
 }
 
 void processEntries(const std::string& projectPath, std::vector<Entry>& entries, GoogleAPIHandler& googleAPIHandler) {
-    std::vector<std::vector<std::string>> rowEntries;
     
+    std::vector<std::vector<std::string>> rowEntries;
     for (Entry& entry : entries) {
 
-        PngTextWriter pngTextWriter(entry.getTitle(), entry.toFilename());
-        pngTextWriter.writeText();
-        
         std::string filename = entry.toFilename();
+        PngTextWriter pngTextWriter(entry.getTitle(), filename);
+        pngTextWriter.writeText();
         
         FileUtils::updateExifOriginalDate(projectPath + filename, entry.getExifDatetime(), entry.getTimeOffset());
 
@@ -60,9 +59,7 @@ int main() {
     FileUtils::setCurrentPath(projectPath);
 
     GoogleAPIHandler googleAPIHandler = GoogleAPIHandler();
-
     std::vector<Entry> entries = extractEntries(googleAPIHandler);
-
     processEntries(projectPath, entries, googleAPIHandler);
     
     return 0;

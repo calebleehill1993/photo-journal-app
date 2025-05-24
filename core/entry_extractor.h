@@ -7,8 +7,6 @@
 class EntryExtractor {
 public:
     virtual ~EntryExtractor() = default;
-
-    // Pure virtual method to be implemented by subclasses
     virtual std::vector<Entry> extractEntries() = 0;
 };
 
