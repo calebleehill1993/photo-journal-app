@@ -52,7 +52,6 @@ private:
     float green;
     float blue;
     std::string textAlignment;
-    const char * descenders;
     bool alwaysUseDescenderSpacing;
     int descenderSpacing;
     int lineSpacing;

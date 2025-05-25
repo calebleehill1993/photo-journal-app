@@ -6,6 +6,8 @@
 #include "../utils/time_utils.h"
 #include "../config/config_handler.h"
 
+namespace ConfigConst = ConfigConstants;
+
 Entry::Entry(std::string date, std::string time, std::string timeOffset, std::vector<std::string> tags, std::vector<std::string> title, std::vector<std::string> body, std::string entryType) {
     this->date = date;
     this->time = time;
@@ -18,7 +20,6 @@ Entry::Entry(std::string date, std::string time, std::string timeOffset, std::ve
 }
 
 void Entry::setPhotosId(std::string& photosId) {
-    std::cout << "setting PhotosID";
     this->photosId = photosId;
 }
 
@@ -91,8 +92,11 @@ std::string Entry::generateId() {
         id += tag + "_";
     }
     id += entryType + "_";
-    id += getFirstNCharsFromParagraphs(title, 10) + "_";
-    id += getFirstNCharsFromParagraphs(body, 10);
+
+    const int TITLE_CHARS = 10;
+    const int BODY_CHARS = 10;
+    id += getFirstNCharsFromParagraphs(title, TITLE_CHARS) + "_";
+    id += getFirstNCharsFromParagraphs(body, BODY_CHARS);
     
     return formattedId(id);
 }
@@ -100,8 +104,8 @@ std::string Entry::generateId() {
 std::string Entry::generatePhotosDescription() {
     std::string description = "";
     std::string ellipse = "...";
-    //TODO CALEB magic strings
-    int photosDescriptionCharLimit = ConfigHandler::getInstance().getConfigValue("settings", "photos_description_char_limit");
+
+    int photosDescriptionCharLimit = ConfigHandler::getInstance().getConfigValue(ConfigConst::SETTINGS, ConfigConst::PHOTOS_DESCRIPTION_CHAR_LIMIT);
     int maxDescriptionLength = photosDescriptionCharLimit - ellipse.length();
     
     if (entryType.length() > 0) {
@@ -128,7 +132,8 @@ std::string Entry::toString() {
     jsonEntry["entryType"] = entryType;
     jsonEntry["generatedId"] = generatedId;
     
-    return jsonEntry.dump(2); //TODO CALEB magic number 2
+    const int JSON_INDENT = 2;
+    return jsonEntry.dump(JSON_INDENT);
 }
 
 std::vector<std::string> Entry::toVector() {

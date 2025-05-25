@@ -36,7 +36,10 @@ std::vector<Entry> extractEntries(GoogleAPIHandler& googleAPIHandler) {
 void processEntries(const std::string& projectPath, std::vector<Entry>& entries, GoogleAPIHandler& googleAPIHandler) {
     
     std::vector<std::vector<std::string>> rowEntries;
+    int entryCount = entries.size();
+    int currentEntry = 0;
     for (Entry& entry : entries) {
+        std::cout << std::endl << "Processing entry " << ++currentEntry << " of " << entryCount << std::endl;
 
         std::string filename = entry.toFilename();
         PngTextWriter pngTextWriter(entry.getTitle(), filename);

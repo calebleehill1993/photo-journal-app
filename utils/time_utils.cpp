@@ -153,7 +153,6 @@ std::string TimeUtils::computeUtcDateTime(const std::string& date, const std::st
 }
 
 std::string TimeUtils::getCurrentDatetime() {
-    // Get the current time and date
     time_t now = time(0);
     tm* ltm = localtime(&now);
     if (ltm == nullptr) {

@@ -29,7 +29,6 @@ g++ -std=c++17 -o main main.cpp \
      utils/time_utils.cpp \
      utils/web_utils.cpp \
      utils/string_utils.cpp \
-     utils/config_utils.cpp \
      utils/file_utils.cpp \
      api/google_sheets.cpp \
      api/google_docs.cpp \

@@ -3,7 +3,7 @@
 #include <stdexcept>
 #include <iostream>
 
-std::string CONFIG_FILE_PATH = "config/config.json";
+namespace ConfigConst = ConfigConstants;
 
 ConfigHandler& ConfigHandler::getInstance() {
     static ConfigHandler instance;
@@ -27,9 +27,10 @@ void ConfigHandler::loadConfig(const std::string& filePath) {
 }
 
 void ConfigHandler::writeJson() {
-    std::ofstream outputFile(CONFIG_FILE_PATH);
+    const int JSON_INDENT = 4;
+    std::ofstream outputFile(ConfigConst::CONFIG_FILE_PATH);
     if (outputFile.is_open()) {
-        outputFile << std::setw(4) << configData << std::endl;
+        outputFile << std::setw(JSON_INDENT) << configData << std::endl;
         outputFile.close();
         std::cout << "JSON data written to config.json" << std::endl;
     } else {
@@ -38,6 +39,6 @@ void ConfigHandler::writeJson() {
 }
 
 ConfigHandler::ConfigHandler() {
-    loadConfig(CONFIG_FILE_PATH);
+    loadConfig(ConfigConst::CONFIG_FILE_PATH);
 }
 

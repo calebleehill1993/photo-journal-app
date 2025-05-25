@@ -20,8 +20,6 @@
 void FileUtils::deleteFile(const std::string& filename) {
     if (std::remove(filename.c_str()) != 0) {
         std::cerr << "Error deleting file: " << filename << std::endl;
-    } else {
-        std::cout << "File deleted successfully: " << filename << std::endl;
     }
 }
 
@@ -45,7 +43,6 @@ std::optional<std::string> FileUtils::readFile(const std::string& imagePath, con
         return std::nullopt;
     }
     
-    std::cout << fullPath << std::endl;
     std::ifstream file(fullPath, std::ios::binary);
     if (!file) {
         std::cerr << "Error opening file: " << fullPath << std::endl;
@@ -95,8 +92,6 @@ void FileUtils::updateExifOriginalDate(const std::string& filename, const std::s
         exifData["Exif.Photo.OffsetTimeOriginal"] = offset;
 
         image->writeMetadata();
-        std::cout << "Successfully updated EXIF DateTimeOriginal to: " << timestamp << std::endl;
-        std::cout << "Successfully updated EXIF OffsetTimeOriginal to: " << offset << std::endl;
 
         return;
     } catch (const Exiv2::Error& e) {

@@ -4,20 +4,27 @@
 #include "../utils/string_utils.h"
 #include "../config/config_handler.h"
 
+namespace ConfigConst = ConfigConstants;
+
+const std::string LEFT = "left";
+const std::string CENTER = "center";
+const std::string RIGHT = "right";
+const std::string DESCENDERS = "gjpqy";
+
 PngTextWriter::PngTextWriter(const std::vector<std::string>& paragraphs, const std::string& filename) {
     // PngTextWriter parameters
     this->paragraphs = paragraphs;
     this->filename = filename;
 
     // Image dimensions
-    aspectRatioWidth = ConfigHandler::getInstance().getConfigValue("settings", "aspect_ratio_width");
-    aspectRatioHeight = ConfigHandler::getInstance().getConfigValue("settings", "aspect_ratio_height");
+    aspectRatioWidth = ConfigHandler::getInstance().getConfigValue(ConfigConst::SETTINGS, ConfigConst::ASPECT_RATIO_WIDTH);
+    aspectRatioHeight = ConfigHandler::getInstance().getConfigValue(ConfigConst::SETTINGS, ConfigConst::ASPECT_RATIO_HEIGHT);
     aspectRatio = (float) aspectRatioWidth / aspectRatioHeight;
     height = 1000; // Initial height
     width = round(height * aspectRatio); // Initial width
 
     // Image margins
-    margins = ConfigHandler::getInstance().getConfigValue("settings", "margins"); //TODO CALEB magic strings
+    margins = ConfigHandler::getInstance().getConfigValue(ConfigConst::SETTINGS, ConfigConst::MARGINS);
     leftMargin = round(width * margins);
     rightMargin = round(width * (1.0 - margins));
     bottomMargin = round(height * margins);
@@ -26,18 +33,17 @@ PngTextWriter::PngTextWriter(const std::vector<std::string>& paragraphs, const s
     textAreaHeight = topMargin - bottomMargin;
 
     // Image Font Settings
-    std::string fontPath = ConfigHandler::getInstance().getConfigValue("settings", "font_path"); //TODO CALEB magic strings
+    std::string fontPath = ConfigHandler::getInstance().getConfigValue(ConfigConst::SETTINGS, ConfigConst::FONT_PATH);
     font = new char[fontPath.length() + 1];
     strcpy(font, fontPath.c_str());
-    fontSize = ConfigHandler::getInstance().getConfigValue("settings", "font_size");
-    red = ConfigHandler::getInstance().getConfigValue("settings", "font_color", "red");
-    green = ConfigHandler::getInstance().getConfigValue("settings", "font_color", "green");
-    blue = ConfigHandler::getInstance().getConfigValue("settings", "font_color", "blue");
-    textAlignment = ConfigHandler::getInstance().getConfigValue("settings", "text_alignment");
+    fontSize = ConfigHandler::getInstance().getConfigValue(ConfigConst::SETTINGS, ConfigConst::FONT_SIZE);
+    red = ConfigHandler::getInstance().getConfigValue(ConfigConst::SETTINGS, ConfigConst::FONT_COLOR, ConfigConst::RED);
+    green = ConfigHandler::getInstance().getConfigValue(ConfigConst::SETTINGS, ConfigConst::FONT_COLOR, ConfigConst::GREEN);
+    blue = ConfigHandler::getInstance().getConfigValue(ConfigConst::SETTINGS, ConfigConst::FONT_COLOR, ConfigConst::BLUE);
+    textAlignment = ConfigHandler::getInstance().getConfigValue(ConfigConst::SETTINGS, ConfigConst::TEXT_ALIGNMENT);
 
     // Spacing Settings
-    alwaysUseDescenderSpacing = ConfigHandler::getInstance().getConfigValue("settings", "always_use_descender_spacing");
-    descenders = "gjpqy";
+    alwaysUseDescenderSpacing = ConfigHandler::getInstance().getConfigValue(ConfigConst::SETTINGS, ConfigConst::ALWAYS_USE_DESCENDER_SPACING);
     descenderSpacing = 30;
     lineSpacing = 10;
     paragraphSpacing = fontSize + descenderSpacing + lineSpacing;
@@ -49,7 +55,7 @@ PngTextWriter::PngTextWriter(const std::vector<std::string>& paragraphs, const s
     heightDelta = 100;
 
     // Debugging
-    showLineBorders = ConfigHandler::getInstance().getConfigValue("debug_settings", "show_line_borders");
+    showLineBorders = ConfigHandler::getInstance().getConfigValue(ConfigConst::DEBUG_SETTINGS, ConfigConst::SHOW_LINE_BORDERS);
 }
 
 PngTextWriter::~PngTextWriter() {
@@ -118,7 +124,7 @@ bool PngTextWriter::fitsInWidth(int textWidth) {
 }
 
 bool PngTextWriter::lineHasDescenders(const std::string& line) {
-    return StringUtils::stringContainsElement(line, descenders);
+    return StringUtils::stringContainsElement(line, DESCENDERS);
 }
 
 int PngTextWriter::getLineHeight(const std::string& line) {
@@ -249,11 +255,11 @@ void PngTextWriter::writeLine(const std::string& line, int startY) {
 
     int lineWidth = getTextWidth(line);
     
-    if (textAlignment == "center") {
+    if (textAlignment == CENTER) {
         startX = leftMargin + round((textAreaWidth - lineWidth) / 2);
-    } else if (textAlignment == "right") {
+    } else if (textAlignment == RIGHT) {
         startX = rightMargin - lineWidth;
-    } else if (textAlignment == "left") {
+    } else if (textAlignment == LEFT) {
         startX = leftMargin;
     } else {
         std::cerr << "Invalid alignment option. Defaulting to left." << std::endl;
@@ -269,5 +275,4 @@ void PngTextWriter::writeLine(const std::string& line, int startY) {
 
 void PngTextWriter::saveAndClose() {
     image.close();
-    std::cout << "Image successfully saved and closed." << std::endl;
 }

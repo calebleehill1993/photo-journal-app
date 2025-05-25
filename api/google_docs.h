@@ -7,6 +7,6 @@ namespace GoogleDocsAPI {
 
     std::string getDocFile(const std::string& docId, const std::string& accessToken);
 
-} // namespace GoogleDocsAPI
+}
 
 #endif // GOOGLE_DOCS_H

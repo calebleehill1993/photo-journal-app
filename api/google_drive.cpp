@@ -72,8 +72,5 @@ std::string GoogleDriveAPI::createGoogleSheetInFolder(const std::string& accessT
     }
 
     nlohmann::json result = nlohmann::json::parse(response_string);
-    std::cout << result.dump(4);
     return result.value("id", "");
-
-    return "";
 }

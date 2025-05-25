@@ -4,6 +4,8 @@
 #include "../config/config_handler.h"
 #include "../utils/web_utils.h"
 
+namespace ConfigConst = ConfigConstants;
+
 GoogleAuth& GoogleAuth::getInstance() {
     static GoogleAuth instance;
     return instance;
@@ -19,8 +21,8 @@ std::string GoogleAuth::getAccessToken() {
 }
 
 GoogleAuth::GoogleAuth() {
-    clientId = ConfigHandler::getInstance().getConfigValue("google_auth", "client_id");
-    clientSecret = ConfigHandler::getInstance().getConfigValue("google_auth", "client_secret");
+    clientId = ConfigHandler::getInstance().getConfigValue(ConfigConst::GOOGLE_AUTH, ConfigConst::CLIENT_ID);
+    clientSecret = ConfigHandler::getInstance().getConfigValue(ConfigConst::GOOGLE_AUTH, ConfigConst::CLIENT_SECRET);
 }
 
 void GoogleAuth::openAuthenticationPage() {
@@ -31,7 +33,6 @@ void GoogleAuth::openAuthenticationPage() {
                             " https://www.googleapis.com/auth/drive";
     
     std::cout << "Sending User to Authentication URL" << std::endl << authURL << std::endl;
-    
     SystemOpenURL(authURL);
 }
 
@@ -84,14 +85,14 @@ void GoogleAuth::getAuthorizationCode() {
     if (pos != std::string::npos) {
         std::size_t endPos = targetUrl.find("&", pos);
         authorizationCode = targetUrl.substr(pos + 5, endPos - (pos + 5));  // Extract the OAuth code
-        std::cout << "Authorization Code Received: " << authorizationCode << std::endl;
+        std::cout << "Authorization Code Received." << std::endl;
     } else {
         std::cerr << "Authorization code not found in the URL." << std::endl;
     }
 }
 
 void GoogleAuth::getNewRefreshToken() {
-    redirectUri = ConfigHandler::getInstance().getConfigValue("google_auth", "redirect_uri");
+    redirectUri = ConfigHandler::getInstance().getConfigValue(ConfigConst::GOOGLE_AUTH, ConfigConst::REDIRECT_URI);
 
     getAuthorizationCode();
 
@@ -121,14 +122,14 @@ void GoogleAuth::getNewRefreshToken() {
 void GoogleAuth::saveRefreshToken(const std::string& response) {
     nlohmann::json jsonResponse = nlohmann::json::parse(response);
     refreshToken = jsonResponse["refresh_token"];
-    std::cout << "Refresh Token: " << refreshToken << std::endl;
+    std::cout << "Received New Refresh Token." << std::endl;
 
-    ConfigHandler::getInstance().setConfigValue("google_auth", "refresh_token", refreshToken.c_str());
+    ConfigHandler::getInstance().setConfigValue(ConfigConst::GOOGLE_AUTH, ConfigConst::REFRESH_TOKEN, refreshToken);
 }
 
 void GoogleAuth::getRefreshToken() {
     try {
-        refreshToken = ConfigHandler::getInstance().getConfigValue("google_auth", "refresh_token");
+        refreshToken = ConfigHandler::getInstance().getConfigValue(ConfigConst::GOOGLE_AUTH, ConfigConst::REFRESH_TOKEN);
     } catch (const std::runtime_error& e) {
         std::cout << "Refresh token not found. Initiating authorization process to retrieve it." << std::endl;
         getNewRefreshToken();

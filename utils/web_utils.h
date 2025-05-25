@@ -8,6 +8,6 @@ namespace WebUtils {
     // Function to handle cURL response
     size_t writeCallback(void* contents, size_t size, size_t nmemb, std::string* output);
 
-} // namespace WebUtils
+}
 
 #endif // WEB_UTILS_H

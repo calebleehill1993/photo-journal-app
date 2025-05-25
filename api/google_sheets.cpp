@@ -12,30 +12,22 @@ void GoogleSheetsAPI::appendRowsToSheet(const std::string& accessToken, const st
     }
 
     std::string response_string;
-
-    // Build URL
     std::string url = "https://sheets.googleapis.com/v4/spreadsheets/" + spreadsheetId +
                     "/values/Sheet1!A1:append?valueInputOption=RAW&insertDataOption=INSERT_ROWS";
 
-    // JSON payload
     nlohmann::json j;
     j["values"] = rowData;
 
     std::string postData = j.dump();
 
-    std::cout << postData << std::endl;
-
-    // Headers
     std::string bearer = "Authorization: Bearer " + accessToken;
     struct curl_slist* headers = nullptr;
     headers = curl_slist_append(headers, bearer.c_str());
     headers = curl_slist_append(headers, "Content-Type: application/json");
 
-    // Set options
     curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
     curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
     curl_easy_setopt(curl, CURLOPT_POSTFIELDS, postData.c_str());
-
     curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WebUtils::writeCallback);
     curl_easy_setopt(curl, CURLOPT_WRITEDATA, &response_string);
 
@@ -44,11 +36,7 @@ void GoogleSheetsAPI::appendRowsToSheet(const std::string& accessToken, const st
 
     if (res != CURLE_OK) {
         std::cerr << "Failed to append row: " << curl_easy_strerror(res) << "\n";
-        return;
     }
-
-    std::cout << "Response: " << response_string << "\n";
-    return;
 }
 
 
@@ -62,6 +50,7 @@ void GoogleSheetsAPI::sortSheetByDateTime(const std::string& accessToken, const 
     std::string url = "https://sheets.googleapis.com/v4/spreadsheets/" + spreadsheetId + ":batchUpdate";
     std::string response_string;
 
+    const int UTC_DATETIME_COLUMN_INDEX = 9;
     nlohmann::json sortRequest = {
         { "requests", {
             {
@@ -72,7 +61,7 @@ void GoogleSheetsAPI::sortSheetByDateTime(const std::string& accessToken, const 
                 }},
                 { "sortSpecs", {
                     {
-                        { "dimensionIndex", 9 },  // Column J = UTC
+                        { "dimensionIndex", UTC_DATETIME_COLUMN_INDEX },
                         { "sortOrder", "DESCENDING" }
                     }
                 }}
@@ -91,7 +80,6 @@ void GoogleSheetsAPI::sortSheetByDateTime(const std::string& accessToken, const 
     curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
     curl_easy_setopt(curl, CURLOPT_POSTFIELDS, postData.c_str());
     curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
-
     curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WebUtils::writeCallback);
     curl_easy_setopt(curl, CURLOPT_WRITEDATA, &response_string);
 
@@ -100,9 +88,5 @@ void GoogleSheetsAPI::sortSheetByDateTime(const std::string& accessToken, const 
 
     if (res != CURLE_OK) {
         std::cerr << "Sort request failed: " << curl_easy_strerror(res) << "\n";
-        return;
     }
-
-    std::cout << "Sort response: " << response_string << "\n";
-    return;
 }

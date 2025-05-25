@@ -30,9 +30,9 @@ std::vector<std::string> StringUtils::split(const std::string& str, const char d
     return result;
 }
 
-bool StringUtils::stringContainsElement(const std::string& str, const char* elements) {
-    for (int i = 0; i < strlen(elements); i++) {
-        if (str.find(elements[i]) != std::string::npos) {
+bool StringUtils::stringContainsElement(const std::string& str, const std::string elements) {
+    for (char element : elements) {
+        if (str.find(element) != std::string::npos) {
             return true;
         }
     }

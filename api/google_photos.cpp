@@ -64,8 +64,6 @@ std::string GooglePhotosAPI::createMediaItem(const std::string& accessToken, con
             }
         }}
     };
-    
-    std::cout << std::endl << "Request: " << requestBody.dump(4) << std::endl;
 
     curl = curl_easy_init();
     if (!curl) {
@@ -93,8 +91,6 @@ std::string GooglePhotosAPI::createMediaItem(const std::string& accessToken, con
         std::cerr << "Failed to create media item: " << curl_easy_strerror(res) << std::endl;
         return "";
     }
-
-    std::cout << "Response: " << response << std::endl;
 
     auto jsonResponse = nlohmann::json::parse(response);
     std::string photos_id = jsonResponse["newMediaItemResults"][0]["mediaItem"]["id"].get<std::string>();

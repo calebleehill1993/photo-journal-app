@@ -31,6 +31,6 @@ namespace TimeUtils {
         OPTIONAL_TIME_OFFSET = 3
     };
 
-} // namespace Time
+}
 
 #endif // TIME_UTILS_H

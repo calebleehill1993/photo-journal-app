@@ -30,5 +30,6 @@ private:
 };
 
 #include "config_handler.tpp"
+#include "config_constants.h"
 
 #endif // CONFIG_HANDLER_H

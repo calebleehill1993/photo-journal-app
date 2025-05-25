@@ -7,9 +7,11 @@
 #include "google_drive.h"
 #include "../config/config_handler.h"
 
+namespace ConfigConst = ConfigConstants;
+
 GoogleAPIHandler::GoogleAPIHandler() {
-    docId = ConfigHandler::getInstance().getConfigValue("settings", "google_doc_id");
-    sheetId = ConfigHandler::getInstance().getConfigValue("settings", "google_sheet_id");
+    docId = ConfigHandler::getInstance().getConfigValue(ConfigConst::SETTINGS, ConfigConst::GOOGLE_DOC_ID);
+    sheetId = ConfigHandler::getInstance().getConfigValue(ConfigConst::SETTINGS, ConfigConst::GOOGLE_SHEET_ID);
 };
 
 std::string GoogleAPIHandler::getDoc() {
@@ -25,7 +27,7 @@ std::string GoogleAPIHandler::uploadPhoto(const std::string& projectPath, std::s
     if (!uploadToken.empty()) {
         std::string photosId = GooglePhotosAPI::createMediaItem(accessToken, uploadToken, filename, description);
         if (photosId.size() > 0) {
-            std::cout << "Successfully uploaded image: " << photosId << std::endl;
+            std::cout << "Successfully uploaded image: " << filename << std::endl;
         }
 
         return photosId;
@@ -42,6 +44,8 @@ void GoogleAPIHandler::appendRowsToSheet(const std::vector<std::vector<std::stri
 
     GoogleSheetsAPI::appendRowsToSheet(accessToken, sheetId, rowData);
     GoogleSheetsAPI::sortSheetByDateTime(accessToken, sheetId);
+
+    std::cout << "Successfully appended " << rowData.size() << " rows to Google Sheet." << std::endl;
 }
 
 void GoogleAPIHandler::authenticate() {
