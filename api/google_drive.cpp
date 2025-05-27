@@ -42,23 +42,26 @@ std::string GoogleDriveAPI::createGoogleSheetInFolder(const std::string& accessT
     CURLcode res;
 
     if (curl) {
-        std::string url = "https://www.googleapis.com/drive/v3/files";
+        const std::string URL = "https://www.googleapis.com/drive/v3/files";
+        const std::string JSON_NAME = "name";
+        const std::string JSON_MIME_TYPE = "mimeType";
+        const std::string JSON_PARENTS = "parents";
+        const std::string MIME_TYPE = "application/vnd.google-apps.spreadsheet";
 
         struct curl_slist* headers = nullptr;
         headers = curl_slist_append(headers, ("Authorization: Bearer " + accessToken).c_str());
         headers = curl_slist_append(headers, "Content-Type: application/json");
 
         nlohmann::json j;
-        j["name"] = sheetName;
-        j["mimeType"] = "application/vnd.google-apps.spreadsheet";
-        j["parents"] = nlohmann::json::array({ folderId });
+        j[JSON_NAME] = sheetName;
+        j[JSON_MIME_TYPE] = MIME_TYPE;
+        j[JSON_PARENTS] = nlohmann::json::array({ folderId });
 
         std::string postData = j.dump();
 
-        curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
+        curl_easy_setopt(curl, CURLOPT_URL, URL.c_str());
         curl_easy_setopt(curl, CURLOPT_POSTFIELDS, postData.c_str());
         curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
-
         curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WebUtils::writeCallback);
         curl_easy_setopt(curl, CURLOPT_WRITEDATA, &response_string);
 

@@ -22,10 +22,9 @@ std::string GoogleAPIHandler::getDoc() {
 std::string GoogleAPIHandler::uploadPhoto(const std::string& projectPath, std::string& filename, const std::string& description) {
     authenticate();
 
-    std::string uploadToken = GooglePhotosAPI::uploadImage(accessToken, projectPath, filename);
-
+    const std::string uploadToken = GooglePhotosAPI::uploadImage(accessToken, projectPath, filename);
     if (!uploadToken.empty()) {
-        std::string photosId = GooglePhotosAPI::createMediaItem(accessToken, uploadToken, filename, description);
+        const std::string photosId = GooglePhotosAPI::createMediaItem(accessToken, uploadToken, filename, description);
         if (photosId.size() > 0) {
             std::cout << "Successfully uploaded image: " << filename << std::endl;
         }

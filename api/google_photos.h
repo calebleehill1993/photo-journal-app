@@ -5,7 +5,7 @@
 
 namespace GooglePhotosAPI {
 
-    std::string uploadImage(const std::string& accessToken, const std::string& imagePath, std::string& filename);
+    std::string uploadImage(const std::string& accessToken, const std::string& imagePath, const std::string& filename);
     std::string createMediaItem(const std::string& accessToken, const std::string& uploadToken, const std::string& filename, const std::string& description);
 
 }

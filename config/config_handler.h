@@ -4,10 +4,11 @@
 #include <string>
 #include <nlohmann/json.hpp>
 
+#include "config_constants.h"
+
 class ConfigHandler {
 public:
     static ConfigHandler& getInstance();
-    void loadConfig(const std::string& filePath);
 
     // Get a configuration value by traversing keys (only string keys are valid)
     template <typename... Keys>
@@ -17,12 +18,12 @@ public:
     template <typename... Keys>
     void setConfigValue(Keys&&... keys);
 
-    void writeJson();
-
 private:
     ConfigHandler();
     ConfigHandler(const ConfigHandler&) = delete;
     ConfigHandler& operator=(const ConfigHandler&) = delete;
+    void loadConfig(const std::string& filePath);
+    void writeJson();
 
 private:
     nlohmann::json configData;
@@ -30,6 +31,5 @@ private:
 };
 
 #include "config_handler.tpp"
-#include "config_constants.h"
 
 #endif // CONFIG_HANDLER_H

@@ -58,12 +58,18 @@ void processEntries(const std::string& projectPath, std::vector<Entry>& entries,
 }
 
 int main() {
-    const std::string projectPath = FileUtils::getExecutableDirectory();
-    FileUtils::setCurrentPath(projectPath);
+    try {
+        const std::string projectPath = FileUtils::getExecutableDirectory();
+        FileUtils::setCurrentPath(projectPath);
 
-    GoogleAPIHandler googleAPIHandler = GoogleAPIHandler();
-    std::vector<Entry> entries = extractEntries(googleAPIHandler);
-    processEntries(projectPath, entries, googleAPIHandler);
-    
+        GoogleAPIHandler googleAPIHandler = GoogleAPIHandler();
+        std::vector<Entry> entries = extractEntries(googleAPIHandler);
+        processEntries(projectPath, entries, googleAPIHandler);
+    }
+    catch (const std::exception& e) {
+        std::cerr << "An error occurred: " << e.what() << std::endl;
+        std::cerr << "Thrown errors are currently intended to be unrecoverable" << std::endl;
+        return 1;
+    }
     return 0;
 }

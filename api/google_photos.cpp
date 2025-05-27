@@ -6,7 +6,7 @@
 #include "../utils/web_utils.h"
 #include "../utils/file_utils.h"
 
-std::string GooglePhotosAPI::uploadImage(const std::string& accessToken, const std::string& imagePath, std::string& filename) {
+std::string GooglePhotosAPI::uploadImage(const std::string& accessToken, const std::string& imagePath, const std::string& filename) {
     CURL* curl;
     CURLcode res;
     std::string response;

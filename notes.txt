@@ -1,7 +1,8 @@
 Next Steps:
-- Add logging DOABLE
-- Git Organization DOABLE
-- Allow for single newlines within title or body of entry LATER
+- Add Tags to Photos Description DOABLE
+- Add more robust logging LATER
+- Google Docs entry default tags for easier writing LATER
+- Allow for single newlines within title or body of Google Docs entry LATER
 - Delete Photos when uploaded setting LATER
 - Default time setting - LATER
 - Batch Photos Upload (Max 50) - LATER

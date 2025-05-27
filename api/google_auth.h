@@ -13,14 +13,13 @@ using tcp = asio::ip::tcp;
 class GoogleAuth {
 public:
     static GoogleAuth& getInstance();
-
-    // Delete copy constructor and assignment operator to enforce singleton
-    GoogleAuth(const GoogleAuth&) = delete;
-    GoogleAuth& operator=(const GoogleAuth&) = delete;
     std::string getAccessToken();
 
 private:
     GoogleAuth();
+    GoogleAuth(const GoogleAuth&) = delete;
+    GoogleAuth& operator=(const GoogleAuth&) = delete;
+
     void openAuthenticationPage();
     void SystemOpenURL(const std::string& url);
     http::request<http::string_body> handle_request(tcp::socket &socket);

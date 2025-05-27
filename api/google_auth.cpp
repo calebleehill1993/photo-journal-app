@@ -12,12 +12,11 @@ GoogleAuth& GoogleAuth::getInstance() {
 }
 
 std::string GoogleAuth::getAccessToken() {
-    if (!accessToken.empty()) {
-        return accessToken;
-    } else {
+    if (accessToken.empty()) {
         accessToken = getNewAccessToken();
-        return accessToken;
     }
+
+    return accessToken;
 }
 
 GoogleAuth::GoogleAuth() {
